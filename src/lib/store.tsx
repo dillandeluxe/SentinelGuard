@@ -14,6 +14,8 @@ interface SystemContextType {
   gateStatus: 'Closed' | 'Opening' | 'Open' | 'Hold';
   
   // Actions
+  addRealUnit: (unit: Omit<Unit, 'id'>) => void;
+  addRealParkingSpace: (space: Omit<ParkingSpace, 'id'>) => void;
   checkInVisitor: (passId: string, parkingBayId?: string) => void;
   quickManualCheckIn: (data: {
     guestName: string;
@@ -40,6 +42,22 @@ export const SystemProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [lprDetections, setLprDetections] = useState<LPRDetection[]>(initialLPRDetections);
   const [gateStatus, setGateStatus] = useState<'Closed' | 'Opening' | 'Open' | 'Hold'>('Closed');
   const [activeGateMessage, setActiveGateMessage] = useState<string | null>(null);
+
+  const addRealUnit = (data: Omit<Unit, 'id'>) => {
+    const newUnit: Unit = {
+      ...data,
+      id: `u-${Date.now()}`,
+    };
+    setUnits((prev) => [newUnit, ...prev]);
+  };
+
+  const addRealParkingSpace = (data: Omit<ParkingSpace, 'id'>) => {
+    const newSpace: ParkingSpace = {
+      ...data,
+      id: `ps-${Date.now()}`,
+    };
+    setParkingSpaces((prev) => [...prev, newSpace]);
+  };
 
   const triggerGateOpen = (reason: string) => {
     setGateStatus('Opening');
@@ -241,6 +259,8 @@ export const SystemProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         lprDetections,
         gateStatus,
         activeGateMessage,
+        addRealUnit,
+        addRealParkingSpace,
         checkInVisitor,
         quickManualCheckIn,
         checkoutVisitorLog,

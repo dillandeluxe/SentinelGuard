@@ -1,0 +1,145 @@
+// SentinelGuard Production Prisma Schema
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  GUARD
+  RESIDENT
+  ADMIN
+}
+
+enum UnitStatus {
+  OCCUPIED
+  VACANT
+  DO_NOT_DISTURB
+  EXPECTING_GUEST
+}
+
+enum VisitorType {
+  GUEST
+  DELIVERY
+  CONTRACTOR
+  VIP
+}
+
+enum PassStatus {
+  ACTIVE
+  CHECKED_IN
+  COMPLETED
+  EXPIRED
+}
+
+enum LogStatus {
+  INSIDE
+  DEPARTED
+}
+
+enum ParkingType {
+  RESIDENT
+  VISITOR
+  EV_CHARGING
+  HANDICAP
+}
+
+enum ParkingStatus {
+  AVAILABLE
+  OCCUPIED_RESIDENT
+  OCCUPIED_VISITOR
+  RESERVED
+  OVERSTAY_WARNING
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      Role     @default(GUARD)
+  station   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Unit {
+  id                  String       @id @default(cuid())
+  unitNumber          String       @unique
+  block               String
+  floor               Int
+  residentName        String
+  residentPhone       String
+  status              UnitStatus   @default(OCCUPIED)
+  allocatedParkingBay String?
+  registeredVehicles  String[]
+  passes              VisitorPass[]
+  logs                VisitorLog[]
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+}
+
+model VisitorPass {
+  id                 String      @id @default(cuid())
+  passCode           String      @unique
+  guestName          String
+  guestPhone         String?
+  vehiclePlate       String?
+  unitId             String
+  unit               Unit        @relation(fields: [unitId], references: [id])
+  unitNumber         String
+  residentName       String
+  visitorType        VisitorType @default(GUEST)
+  validFrom          DateTime
+  validUntil         DateTime
+  status             PassStatus  @default(ACTIVE)
+  assignedParkingBay String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+}
+
+model VisitorLog {
+  id                 String      @id @default(cuid())
+  guestName          String
+  visitorType        VisitorType @default(GUEST)
+  unitId             String?
+  unit               Unit?       @relation(fields: [unitId], references: [id])
+  unitNumber         String
+  vehiclePlate       String?
+  entryTime          DateTime    @default(now())
+  exitTime           DateTime?
+  guardName          String
+  assignedParkingBay String?
+  status             LogStatus   @default(INSIDE)
+  notes              String?
+  createdAt          DateTime    @default(now())
+}
+
+model ParkingSpace {
+  id                  String        @id @default(cuid())
+  bayNumber           String        @unique
+  zone                String
+  type                ParkingType   @default(VISITOR)
+  status              ParkingStatus @default(AVAILABLE)
+  currentVehiclePlate String?
+  assignedUnitNumber  String?
+  occupantName        String?
+  entryTime           DateTime?
+  maxHoursAllowed     Int?          @default(4)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+}
+
+model LprDetection {
+  id              String   @id @default(cuid())
+  plateNumber     String
+  confidence      Float
+  timestamp       DateTime @default(now())
+  cameraName      String
+  matchedStatus   String
+  matchedUnit     String?
+  matchedName     String?
+  suggestedAction String
+}
