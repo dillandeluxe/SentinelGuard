@@ -142,11 +142,6 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
 
       {/* Hero Headline */}
       <section className="max-w-7xl w-full mx-auto px-6 pt-12 pb-8 text-center z-10 space-y-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900/90 border border-white/10 text-zinc-300 text-xs font-mono-tabular">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>CIT-U Capstone Monorepo • Hardware PWA Security Console</span>
-        </div>
-
         <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white max-w-4xl mx-auto leading-[1.12]">
           Automated Boom Barrier. Optical Vision. Zero Friction.
         </h1>
