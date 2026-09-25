@@ -1,23 +1,115 @@
 @import "tailwindcss";
 
-@layer utilities {
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(4px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .animate-fade-in {
-    animation: fadeIn 0.25s ease-out forwards;
-  }
+:root {
+  --canvas: #09090b;
+  --surface: #111114;
+  --surface-elevated: #16161a;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  --border-focus: rgba(255, 255, 255, 0.2);
+  --text-main: #f4f4f5;
+  --text-muted: #a1a1aa;
+  --text-subtle: #71717a;
+  
+  --emerald-glow: rgba(16, 185, 129, 0.15);
+  --emerald-border: rgba(16, 185, 129, 0.3);
+  --crimson-glow: rgba(239, 68, 68, 0.15);
+  --crimson-border: rgba(239, 68, 68, 0.3);
+  
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 body {
-  background-color: #020617;
-  color: #f8fafc;
+  background-color: var(--canvas);
+  color: var(--text-main);
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Tabular Monospace for plate numbers, telemetry, and timecodes */
+.font-mono-tabular {
+  font-family: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-feature-settings: 'tnum' on, 'zero' on;
+}
+
+/* Background Hardware Technical Dot Matrix */
+.bg-hardware-grid {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Precision Hardware Cards with Top Specular Lighting */
+.card-carbon {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.card-carbon-elevated {
+  background: var(--surface-elevated);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Tactile Physical Button Response */
+.btn-tactile {
+  transition: all 0.2s var(--ease-spring);
+}
+
+.btn-tactile:active {
+  transform: scale(0.975);
+}
+
+/* LPR Laser Scan Animation */
+@keyframes laserScan {
+  0% {
+    top: 0%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+.animate-laser {
+  animation: laserScan 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Physical Boom Barrier Arm Motion */
+.barrier-arm {
+  transform-origin: 12px 12px;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.barrier-arm.raised {
+  transform: rotate(-72deg);
+}
+
+.barrier-arm.lowered {
+  transform: rotate(0deg);
+}
+
+/* Micro Fade-In */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.28s var(--ease-spring) forwards;
 }
