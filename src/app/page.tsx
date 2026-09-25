@@ -19,7 +19,9 @@ import {
   LogOut,
   User,
   QrCode,
-  FileCheck
+  FileCheck,
+  Radio,
+  SlidersHorizontal
 } from 'lucide-react';
 
 export default function Home() {
@@ -70,103 +72,111 @@ export default function Home() {
 
   return (
     <SystemProvider>
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-sky-500 selection:text-slate-950">
-        {/* Top Navbar */}
-        <header className="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-black">
+        {/* Precision Hardware Top Bar */}
+        <header className="bg-zinc-950/80 backdrop-blur-xl border-b border-white/10 sticky top-0 z-40">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
+            {/* Brand Logo & Telemetry Indicator */}
             <div className="flex items-center gap-3">
               <div
                 onClick={() => setViewState('Landing')}
-                className="p-2.5 bg-gradient-to-tr from-sky-500 to-indigo-600 rounded-xl text-white shadow-lg shadow-sky-500/20 cursor-pointer hover:scale-105 transition-transform"
+                className="btn-tactile w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 cursor-pointer shadow-sm shadow-emerald-500/20"
+                title="Return to Landing"
               >
-                <ShieldCheck className="w-6 h-6" />
+                <ShieldCheck className="w-5 h-5" />
               </div>
               <div>
-                <h1 className="text-lg font-extrabold text-white tracking-tight flex items-center gap-2">
-                  SentinelGuard <span className="text-sky-400 text-xs px-2 py-0.5 rounded bg-sky-500/10 border border-sky-500/20 font-mono font-semibold">PWA v2.4</span>
-                </h1>
-                <p className="text-xs text-slate-400">Residence Check-In & Smart Parking Management System</p>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-sm font-bold text-white tracking-tight">SentinelGuard</h1>
+                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-900 border border-white/10 text-emerald-400">
+                    EDGE OS v2.4
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-500">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>STATION 01 • ACTIVE</span>
+                </div>
               </div>
             </div>
 
-            {/* Navigation Tabs */}
-            <nav className="flex items-center gap-1 bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800/80 overflow-x-auto max-w-full">
+            {/* Hardware Segmented Navigation Switcher */}
+            <nav className="flex items-center gap-1 bg-zinc-900/90 p-1 rounded-lg border border-white/10 overflow-x-auto max-w-full">
               <button
                 onClick={() => setActiveTab('Guard')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
+                className={`btn-tactile px-3 py-1.5 rounded text-xs font-mono font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
                   activeTab === 'Guard'
-                    ? 'bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                    ? 'bg-zinc-800 text-emerald-400 border border-emerald-500/30 shadow-sm'
+                    : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
-                <ShieldCheck className="w-4 h-4" />
-                Guard Console
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Guard Console</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('Parking')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
+                className={`btn-tactile px-3 py-1.5 rounded text-xs font-mono font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
                   activeTab === 'Parking'
-                    ? 'bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                    ? 'bg-zinc-800 text-emerald-400 border border-emerald-500/30 shadow-sm'
+                    : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
-                <ParkingSquare className="w-4 h-4" />
-                Parking Grid
+                <ParkingSquare className="w-3.5 h-3.5" />
+                <span>Parking Grid</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('LPR')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
+                className={`btn-tactile px-3 py-1.5 rounded text-xs font-mono font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
                   activeTab === 'LPR'
-                    ? 'bg-purple-500 text-white shadow-md shadow-purple-500/20'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                    ? 'bg-zinc-800 text-emerald-400 border border-emerald-500/30 shadow-sm'
+                    : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
-                <Camera className="w-4 h-4" />
-                LPR Vision AI
+                <Camera className="w-3.5 h-3.5" />
+                <span>Optical LPR</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('Resident')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
+                className={`btn-tactile px-3 py-1.5 rounded text-xs font-mono font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
                   activeTab === 'Resident'
-                    ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/20'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                    ? 'bg-zinc-800 text-emerald-400 border border-emerald-500/30 shadow-sm'
+                    : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
-                <QrCode className="w-4 h-4" />
-                Resident Portal
+                <QrCode className="w-3.5 h-3.5" />
+                <span>Resident Pass</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('Admin')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
+                className={`btn-tactile px-3 py-1.5 rounded text-xs font-mono font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
                   activeTab === 'Admin'
-                    ? 'bg-teal-500 text-slate-950 shadow-md shadow-teal-500/20'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                    ? 'bg-zinc-800 text-emerald-400 border border-emerald-500/30 shadow-sm'
+                    : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
-                <BarChart3 className="w-4 h-4" />
-                Analytics
+                <BarChart3 className="w-3.5 h-3.5" />
+                <span>Analytics</span>
               </button>
             </nav>
 
-            {/* Current User Session Badge & Logout */}
-            <div className="flex items-center gap-3">
+            {/* User Session & Status */}
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowChecklistModal(true)}
-                className="px-3 py-1.5 bg-slate-950 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition"
+                className="btn-tactile px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-white/10 rounded-lg text-xs font-mono flex items-center gap-1.5 transition"
               >
-                <FileCheck className="w-3.5 h-3.5 text-sky-400" />
-                Checklist
+                <FileCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="hidden sm:inline">Readiness</span>
               </button>
 
               {currentUser && (
-                <div className="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 text-xs">
-                  <User className="w-3.5 h-3.5 text-sky-400" />
-                  <span className="font-semibold text-white">{currentUser.name}</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300">
+                <div className="flex items-center gap-2 bg-zinc-900 px-2.5 py-1.5 rounded-lg border border-white/10 text-xs">
+                  <User className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="font-medium text-white max-w-[120px] truncate">{currentUser.name}</span>
+                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-300 border border-white/5">
                     {currentUser.role}
                   </span>
                 </div>
@@ -174,8 +184,8 @@ export default function Home() {
 
               <button
                 onClick={handleLogout}
-                className="p-2 text-slate-400 hover:text-rose-400 bg-slate-950 hover:bg-rose-500/10 rounded-xl border border-slate-800 transition"
-                title="Sign Out"
+                className="btn-tactile p-1.5 text-zinc-400 hover:text-rose-400 bg-zinc-900 hover:bg-rose-500/10 rounded-lg border border-white/10 transition"
+                title="Disconnect Session"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -192,7 +202,7 @@ export default function Home() {
           {activeTab === 'Admin' && <AdminDashboard />}
         </main>
 
-        {/* Modal */}
+        {/* Readiness Checklist Modal */}
         {showChecklistModal && (
           <ProductionChecklistModal onClose={() => setShowChecklistModal(false)} />
         )}
