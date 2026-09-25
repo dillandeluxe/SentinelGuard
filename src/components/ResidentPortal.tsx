@@ -15,7 +15,8 @@ import {
   Copy, 
   Send,
   Sparkles,
-  UserCheck
+  UserCheck,
+  Check
 } from 'lucide-react';
 import QRCode from 'qrcode';
 import { VisitorPass } from '../lib/types';
@@ -53,7 +54,14 @@ export const ResidentPortal: React.FC = () => {
     });
 
     try {
-      const url = await QRCode.toDataURL(pass.passCode, { margin: 2, width: 240 });
+      const url = await QRCode.toDataURL(pass.passCode, { 
+        margin: 1, 
+        width: 220,
+        color: {
+          dark: '#000000',
+          light: '#ffffff'
+        }
+      });
       setQrDataUrl(url);
     } catch (err) {
       console.error('QR error', err);
@@ -74,33 +82,38 @@ export const ResidentPortal: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 rounded-xl">
-            <Building2 className="w-7 h-7" />
+      <div className="card-carbon-elevated p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 shrink-0">
+            <Building2 className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              Resident & Host Visitor Pre-Registration Portal
-            </h3>
-            <p className="text-xs text-slate-400">Issue instant QR digital passes to guests, drivers, and delivery contractors</p>
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-bold text-white tracking-tight">Resident Guest Pass Dispatch</h3>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 border border-emerald-500/25 text-emerald-400">
+                ACTIVE
+              </span>
+            </div>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              Generate encrypted QR credentials for instant contactless barrier clearance
+            </p>
           </div>
         </div>
 
         {/* Unit Selector */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-400 font-medium">Logged in Unit:</span>
+        <div className="flex items-center gap-2 bg-zinc-950 p-1.5 rounded-lg border border-white/10">
+          <span className="text-[11px] font-mono text-zinc-500 pl-1.5">UNIT:</span>
           <select
             value={selectedUnitId}
             onChange={(e) => {
               setSelectedUnitId(e.target.value);
               setGeneratedPass(null);
             }}
-            className="bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-indigo-500"
+            className="bg-zinc-900 border border-white/10 rounded px-2.5 py-1 text-xs text-white font-mono focus:outline-none focus:border-emerald-500"
           >
             {units.map((u) => (
               <option key={u.id} value={u.id}>
-                {u.unitNumber} - {u.residentName}
+                {u.unitNumber} — {u.residentName}
               </option>
             ))}
           </select>
@@ -108,44 +121,44 @@ export const ResidentPortal: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Issue New Pass Form */}
+        {/* Left Column: Issue Pass Form */}
         <div className="lg:col-span-6 space-y-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
-            <div className="flex items-center gap-2 border-b border-slate-800 pb-3 text-indigo-400 font-semibold text-base">
-              <PlusCircle className="w-5 h-5" />
-              <h3>Issue New Digital Guest Pass</h3>
+          <div className="card-carbon p-6 space-y-5">
+            <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+              <PlusCircle className="w-4 h-4 text-emerald-400" />
+              <h3 className="text-sm font-semibold text-white">Create Digital Access Pass</h3>
             </div>
 
             <form onSubmit={handleGeneratePass} className="space-y-4">
               <div>
-                <label className="text-xs text-slate-400 font-medium block mb-1">Guest Full Name *</label>
+                <label className="text-[11px] font-mono text-zinc-400 block mb-1">Guest Full Name *</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Liam Harrison"
                   value={guestName}
                   onChange={(e) => setGuestName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-slate-400 font-medium block mb-1">Guest Phone Number</label>
+                  <label className="text-[11px] font-mono text-zinc-400 block mb-1">Phone Number</label>
                   <input
                     type="text"
                     placeholder="+1 (555) 000-0000"
                     value={guestPhone}
                     onChange={(e) => setGuestPhone(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 font-mono"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-400 font-medium block mb-1">Visitor Category</label>
+                  <label className="text-[11px] font-mono text-zinc-400 block mb-1">Visitor Category</label>
                   <select
                     value={visitorType}
                     onChange={(e) => setVisitorType(e.target.value as any)}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
                   >
                     <option value="Guest">Social Guest</option>
                     <option value="Delivery">Delivery / Food</option>
@@ -156,124 +169,126 @@ export const ResidentPortal: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-xs text-slate-400 font-medium block mb-1">
-                  Vehicle License Plate (Optional for LPR Gate Auto-Open)
+                <label className="text-[11px] font-mono text-zinc-400 block mb-1">
+                  License Plate (Enables LPR Optical Auto-Clearance)
                 </label>
                 <input
                   type="text"
                   placeholder="e.g. LHM-4491"
                   value={vehiclePlate}
                   onChange={(e) => setVehiclePlate(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white font-mono uppercase placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-mono uppercase placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3 bg-gradient-to-r from-indigo-500 to-sky-600 hover:from-indigo-400 hover:to-sky-500 text-white font-bold text-sm rounded-xl transition shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2"
+                className="btn-tactile w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs rounded-lg transition shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2"
               >
                 <QrCode className="w-4 h-4" />
-                Generate Instant Guest Pass QR Code
+                <span>Generate Encrypted QR Pass</span>
               </button>
             </form>
           </div>
         </div>
 
-        {/* Right Column: Digital Pass Preview & Share Card */}
+        {/* Right Column: Pass Preview & Unit History */}
         <div className="lg:col-span-6 space-y-6">
           {generatedPass ? (
-            <div className="bg-slate-900 border border-indigo-500/50 rounded-2xl p-6 shadow-2xl space-y-5 relative overflow-hidden animate-fade-in">
-              <div className="absolute top-0 right-0 p-3 bg-indigo-500 text-slate-950 font-bold text-[10px] uppercase tracking-wider rounded-bl-xl">
-                Pass Active & Ready
+            <div className="card-carbon-elevated p-6 space-y-4 animate-fade-in relative overflow-hidden">
+              <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <h4 className="text-sm font-semibold text-white">Active Pass Credential</h4>
+                </div>
+                <span className="font-mono text-xs text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                  {generatedPass.passCode}
+                </span>
               </div>
 
-              <div className="flex items-center gap-2 text-indigo-400 font-semibold text-base border-b border-slate-800 pb-3">
-                <Sparkles className="w-5 h-5 text-indigo-400" />
-                <h3>Digital Visitor Pass Created</h3>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center gap-6 bg-slate-950 p-5 rounded-2xl border border-slate-800">
+              <div className="flex flex-col sm:flex-row items-center gap-5 bg-zinc-950/80 p-4 rounded-xl border border-white/10">
                 {qrDataUrl ? (
-                  <img src={qrDataUrl} alt="Guest QR Code" className="w-40 h-40 rounded-xl border border-white/20 p-2 bg-white" />
+                  <img 
+                    src={qrDataUrl} 
+                    alt="Visitor QR Code" 
+                    className="w-36 h-36 rounded-lg p-2 bg-white shrink-0" 
+                  />
                 ) : (
-                  <div className="w-40 h-40 bg-slate-900 rounded-xl flex items-center justify-center text-slate-500 text-xs">
-                    Generating QR...
+                  <div className="w-36 h-36 bg-zinc-900 rounded-lg flex items-center justify-center text-zinc-500 text-xs font-mono">
+                    GENERATING...
                   </div>
                 )}
 
-                <div className="space-y-2 text-xs flex-1 text-center sm:text-left">
-                  <span className="font-mono text-sm font-extrabold text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded border border-indigo-500/30 inline-block">
-                    {generatedPass.passCode}
-                  </span>
-                  <h4 className="text-white font-bold text-lg">{generatedPass.guestName}</h4>
-                  <p className="text-slate-400">
-                    Visiting Unit: <span className="text-white font-semibold">{generatedPass.unitNumber}</span> ({generatedPass.residentName})
-                  </p>
+                <div className="space-y-1.5 text-xs flex-1 text-center sm:text-left">
+                  <div className="text-sm font-bold text-white">{generatedPass.guestName}</div>
+                  <div className="text-zinc-400">
+                    Destination: <span className="text-emerald-300 font-semibold">Unit {generatedPass.unitNumber}</span> ({generatedPass.residentName})
+                  </div>
                   {generatedPass.vehiclePlate && (
-                    <p className="text-slate-400">
-                      Registered Plate: <span className="font-mono text-amber-400 font-bold">{generatedPass.vehiclePlate}</span>
-                    </p>
+                    <div className="text-zinc-400 font-mono text-[11px]">
+                      Vehicle: <span className="text-amber-300 font-bold">{generatedPass.vehiclePlate}</span>
+                    </div>
                   )}
-                  <p className="text-slate-500 text-[11px] pt-1">
-                    Valid 24 hours from issue time
-                  </p>
+                  <div className="text-[10px] font-mono text-zinc-500 pt-1">
+                    EXPIRES: 24h from issue
+                  </div>
                 </div>
               </div>
 
-              {/* Share & Copy Action Buttons */}
-              <div className="grid grid-cols-2 gap-3 pt-1">
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-2.5 pt-1">
                 <button
                   onClick={() => copyToClipboard(`https://sentinelguard.app/pass/${generatedPass.passCode}`)}
-                  className="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-xs transition flex items-center justify-center gap-2 border border-slate-700"
+                  className="btn-tactile py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 font-medium rounded-lg text-xs flex items-center justify-center gap-1.5 border border-white/10"
                 >
-                  <Copy className="w-3.5 h-3.5" />
-                  {copied ? 'Pass Link Copied!' : 'Copy Pass Link'}
+                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copied ? 'Link Copied' : 'Copy Link'}</span>
                 </button>
 
                 <button
                   onClick={() => {
-                    const text = `Hi ${generatedPass.guestName}, here is your digital entry pass for Unit ${generatedPass.unitNumber}: Pass Code: ${generatedPass.passCode}`;
+                    const text = `Hi ${generatedPass.guestName}, here is your digital entry pass for SentinelGuard Gate 1 (Unit ${generatedPass.unitNumber}): Pass Code ${generatedPass.passCode}`;
                     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
                   }}
-                  className="py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20"
+                  className="btn-tactile py-2 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 font-semibold rounded-lg text-xs flex items-center justify-center gap-1.5"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  Share via WhatsApp
+                  <span>Send via WhatsApp</span>
                 </button>
               </div>
             </div>
           ) : (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col items-center justify-center text-center py-16 text-slate-500 space-y-3">
-              <QrCode className="w-12 h-12 text-slate-700" />
-              <h4 className="text-slate-300 font-semibold">No Pass Generated Yet</h4>
-              <p className="text-xs text-slate-500 max-w-xs">
-                Fill out the visitor form on the left to create a digital QR pass for your guest.
+            <div className="card-carbon p-6 flex flex-col items-center justify-center text-center py-14 text-zinc-500 space-y-2">
+              <QrCode className="w-10 h-10 text-zinc-700" />
+              <div className="text-xs font-semibold text-zinc-300">No Pass Active in Preview</div>
+              <p className="text-[11px] text-zinc-500 max-w-xs font-mono">
+                Submit guest details on the left to issue an instant cryptographic entry pass.
               </p>
             </div>
           )}
 
-          {/* Active Passes List for Selected Unit */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
-            <h4 className="text-sm font-bold text-white flex items-center justify-between border-b border-slate-800 pb-2">
-              <span>Active Passes for {activeUnit.unitNumber}</span>
-              <span className="text-xs font-mono text-indigo-400">{unitPasses.length} Active</span>
-            </h4>
+          {/* Active Passes for Selected Unit */}
+          <div className="card-carbon p-5 space-y-3">
+            <div className="flex items-center justify-between border-b border-white/5 pb-2">
+              <span className="text-xs font-semibold text-white">Issued Passes for Unit {activeUnit.unitNumber}</span>
+              <span className="text-[11px] font-mono text-emerald-400">{unitPasses.length} total</span>
+            </div>
 
-            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+            <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
               {unitPasses.length === 0 ? (
-                <p className="text-xs text-slate-500 text-center py-4">No active passes issued for this unit.</p>
+                <div className="text-[11px] text-zinc-500 text-center py-4 font-mono">No active passes issued.</div>
               ) : (
                 unitPasses.map((pass) => (
                   <div
                     key={pass.id}
-                    className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between text-xs"
+                    className="p-2.5 bg-zinc-950/70 border border-white/5 rounded-lg flex items-center justify-between text-xs"
                   >
                     <div>
                       <span className="font-semibold text-white">{pass.guestName}</span>
-                      <span className="text-slate-400 block font-mono text-[11px]">{pass.passCode} • {pass.visitorType}</span>
+                      <span className="text-zinc-500 block font-mono text-[10px]">{pass.passCode} • {pass.visitorType}</span>
                     </div>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                      pass.status === 'CheckedIn' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-indigo-500/20 text-indigo-300'
+                    <span className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase ${
+                      pass.status === 'CheckedIn' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-zinc-800 text-zinc-300'
                     }`}>
                       {pass.status}
                     </span>

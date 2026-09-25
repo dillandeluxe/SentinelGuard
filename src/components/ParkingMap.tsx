@@ -14,7 +14,8 @@ import {
   ShieldAlert,
   Info,
   Filter,
-  RefreshCw
+  RefreshCw,
+  Layers
 } from 'lucide-react';
 import { ParkingSpace } from '../lib/types';
 
@@ -40,68 +41,70 @@ export const ParkingMap: React.FC = () => {
     <div className="space-y-6">
       {/* Top Parking Analytics Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between shadow-xl">
+        <div className="card-carbon p-4 flex items-center justify-between">
           <div>
-            <span className="text-xs font-medium text-slate-400 block">Total Parking Bays</span>
-            <span className="text-2xl font-bold text-white font-mono">{totalBays} Slots</span>
+            <span className="text-zinc-500 text-xs font-mono block">TOTAL CAPACITY</span>
+            <span className="text-2xl font-bold text-white font-mono">{totalBays} Bays</span>
           </div>
-          <div className="p-3 bg-sky-500/10 text-sky-400 rounded-xl border border-sky-500/20">
-            <ParkingSquare className="w-6 h-6" />
+          <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-white/10 flex items-center justify-center text-zinc-300">
+            <ParkingSquare className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between shadow-xl">
+        <div className="card-carbon p-4 flex items-center justify-between">
           <div>
-            <span className="text-xs font-medium text-slate-400 block">Available Open Bays</span>
+            <span className="text-zinc-500 text-xs font-mono block">VACANT AVAILABLE</span>
             <span className="text-2xl font-bold text-emerald-400 font-mono">{availableBays} Open</span>
           </div>
-          <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
-            <CheckCircle2 className="w-6 h-6" />
+          <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <CheckCircle2 className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between shadow-xl">
+        <div className="card-carbon p-4 flex items-center justify-between">
           <div>
-            <span className="text-xs font-medium text-slate-400 block">Active Visitor Bays</span>
-            <span className="text-2xl font-bold text-amber-400 font-mono">{visitorBaysOccupied} Vehicles</span>
+            <span className="text-zinc-500 text-xs font-mono block">VISITOR OCCUPIED</span>
+            <span className="text-2xl font-bold text-amber-400 font-mono">{visitorBaysOccupied} Stalls</span>
           </div>
-          <div className="p-3 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20">
-            <Car className="w-6 h-6" />
+          <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+            <Car className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between shadow-xl">
+        <div className="card-carbon p-4 flex items-center justify-between">
           <div>
-            <span className="text-xs font-medium text-slate-400 block">Overstay Warnings</span>
-            <span className="text-2xl font-bold text-rose-400 font-mono">{overstayWarnings} Flagged</span>
+            <span className="text-zinc-500 text-xs font-mono block">OVERSTAY VIOLATIONS</span>
+            <span className="text-2xl font-bold text-rose-400 font-mono">{overstayWarnings} Stalls</span>
           </div>
-          <div className="p-3 bg-rose-500/10 text-rose-400 rounded-xl border border-rose-500/20">
-            <ShieldAlert className="w-6 h-6" />
+          <div className="w-10 h-10 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+            <ShieldAlert className="w-5 h-5" />
           </div>
         </div>
       </div>
 
       {/* Main Interactive Parking Map & Slot Grid */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
-          <div className="flex items-center gap-2">
-            <ParkingSquare className="w-6 h-6 text-sky-400" />
+      <div className="card-carbon-elevated p-6 space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <Layers className="w-4 h-4" />
+            </div>
             <div>
-              <h3 className="text-lg font-bold text-white">Live Parking Space Allocation Grid</h3>
-              <p className="text-xs text-slate-400">Click any bay to view details, assign vehicles, or clear space</p>
+              <h3 className="text-base font-bold text-white tracking-tight">Real-Time Bay Allocation Grid</h3>
+              <p className="text-xs text-zinc-400">Click any stall to view occupant telemetry or force release slot</p>
             </div>
           </div>
 
-          {/* Zone Filter Tabs */}
-          <div className="flex items-center gap-2 bg-slate-950 p-1 rounded-xl border border-slate-800">
+          {/* Zone Filter Segmented Control */}
+          <div className="flex items-center gap-1 bg-zinc-950 p-1 rounded-lg border border-white/10">
             {zones.map((zone) => (
               <button
                 key={zone}
                 onClick={() => setSelectedZone(zone)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                className={`btn-tactile px-3 py-1.5 rounded text-xs font-mono transition ${
                   selectedZone === zone
-                    ? 'bg-sky-500 text-slate-950 font-bold shadow'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-zinc-800 text-white font-bold border border-white/10 shadow-sm'
+                    : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
                 {zone}
@@ -111,104 +114,96 @@ export const ParkingMap: React.FC = () => {
         </div>
 
         {/* Legend */}
-        <div className="flex flex-wrap items-center gap-4 text-xs bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
-          <span className="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Legend:</span>
+        <div className="flex flex-wrap items-center gap-4 text-xs bg-zinc-950/60 p-3 rounded-lg border border-white/5 font-mono">
+          <span className="text-zinc-500 font-semibold uppercase text-[10px]">Telemetry Status:</span>
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-emerald-500 border border-emerald-400"></span>
-            <span className="text-slate-300">Available</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
+            <span className="text-zinc-300 text-[11px]">Available</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-amber-500 border border-amber-400"></span>
-            <span className="text-slate-300">Occupied (Visitor)</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50" />
+            <span className="text-zinc-300 text-[11px]">Visitor Active</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-sky-500 border border-sky-400"></span>
-            <span className="text-slate-300">Occupied (Resident)</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-sky-500 shadow-sm shadow-sky-500/50" />
+            <span className="text-zinc-300 text-[11px]">Resident Assigned</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-purple-500 border border-purple-400"></span>
-            <span className="text-slate-300">Reserved</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-rose-500 animate-pulse border border-rose-400"></span>
-            <span className="text-slate-300">Overstay Alert (&gt;4 Hours)</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse shadow-sm shadow-rose-500/50" />
+            <span className="text-rose-300 text-[11px]">Overstay (&gt;4h)</span>
           </div>
         </div>
 
         {/* Parking Grid Visualization */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5">
           {filteredSpaces.map((space) => {
             const isAvailable = space.status === 'Available';
             const isVisitor = space.status === 'Occupied_Visitor';
             const isResident = space.status === 'Occupied_Resident';
             const isOverstay = space.status === 'Overstay_Warning';
-            const isReserved = space.status === 'Reserved';
 
-            let cardBg = 'bg-slate-950/80 border-slate-800 hover:border-slate-700';
-            let statusColor = 'text-slate-400';
+            let cardBg = 'bg-zinc-950/70 border-white/5 hover:border-white/20';
+            let statusColor = 'text-zinc-400';
 
             if (isAvailable) {
-              cardBg = 'bg-emerald-950/20 border-emerald-500/30 hover:border-emerald-500/60';
+              cardBg = 'bg-emerald-950/15 border-emerald-500/25 hover:border-emerald-500/50';
               statusColor = 'text-emerald-400';
             } else if (isVisitor) {
-              cardBg = 'bg-amber-950/20 border-amber-500/40 hover:border-amber-500/80';
+              cardBg = 'bg-amber-950/15 border-amber-500/25 hover:border-amber-500/50';
               statusColor = 'text-amber-400';
             } else if (isResident) {
-              cardBg = 'bg-sky-950/20 border-sky-500/40 hover:border-sky-500/80';
+              cardBg = 'bg-sky-950/15 border-sky-500/25 hover:border-sky-500/50';
               statusColor = 'text-sky-400';
             } else if (isOverstay) {
-              cardBg = 'bg-rose-950/30 border-rose-500/60 ring-1 ring-rose-500/60 animate-pulse';
+              cardBg = 'bg-rose-950/25 border-rose-500/40 ring-1 ring-rose-500/40 animate-pulse';
               statusColor = 'text-rose-400';
-            } else if (isReserved) {
-              cardBg = 'bg-purple-950/20 border-purple-500/40 hover:border-purple-500/80';
-              statusColor = 'text-purple-400';
             }
 
             return (
               <div
                 key={space.id}
                 onClick={() => setSelectedSpace(space)}
-                className={`p-4 rounded-xl border cursor-pointer transition-all space-y-2 relative overflow-hidden group ${cardBg}`}
+                className={`p-3.5 rounded-lg border cursor-pointer transition-all space-y-2 relative overflow-hidden group ${cardBg} btn-tactile`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-mono font-bold text-sm text-white flex items-center gap-1">
-                    {space.type === 'EV_Charging' && <Zap className="w-3.5 h-3.5 text-amber-400" />}
-                    {space.type === 'Handicap' && <Accessibility className="w-3.5 h-3.5 text-sky-400" />}
+                  <span className="font-mono font-bold text-xs text-white flex items-center gap-1">
+                    {space.type === 'EV_Charging' && <Zap className="w-3 h-3 text-amber-400" />}
+                    {space.type === 'Handicap' && <Accessibility className="w-3 h-3 text-sky-400" />}
                     {space.bayNumber}
                   </span>
-                  <span className={`w-2.5 h-2.5 rounded-full ${
-                    isAvailable ? 'bg-emerald-500' :
-                    isVisitor ? 'bg-amber-500' :
-                    isResident ? 'bg-sky-500' :
-                    isOverstay ? 'bg-rose-500 animate-ping' :
-                    'bg-purple-500'
-                  }`}></span>
+                  <span className={`w-2 h-2 rounded-full ${
+                    isAvailable ? 'bg-emerald-400' :
+                    isVisitor ? 'bg-amber-400' :
+                    isResident ? 'bg-sky-400' :
+                    isOverstay ? 'bg-rose-400 animate-ping' :
+                    'bg-purple-400'
+                  }`} />
                 </div>
 
-                <div className="text-xs space-y-1">
-                  <div className={`font-semibold ${statusColor}`}>
-                    {isAvailable ? 'Available' :
-                     isVisitor ? 'Visitor Parked' :
-                     isResident ? 'Resident' :
-                     isOverstay ? 'OVERSTAY WARNING' :
-                     'Reserved'}
+                <div className="text-xs space-y-1 font-mono">
+                  <div className={`text-[11px] font-semibold ${statusColor}`}>
+                    {isAvailable ? 'VACANT' :
+                     isVisitor ? 'VISITOR' :
+                     isResident ? 'RESIDENT' :
+                     isOverstay ? 'OVERSTAY' :
+                     'RESERVED'}
                   </div>
 
                   {space.currentVehiclePlate && (
-                    <div className="font-mono text-[11px] text-white font-bold bg-slate-900/90 px-2 py-0.5 rounded border border-slate-800 w-max">
+                    <div className="text-[10px] text-zinc-100 font-bold bg-zinc-900/90 px-1.5 py-0.5 rounded border border-white/10 w-max truncate">
                       {space.currentVehiclePlate}
                     </div>
                   )}
 
                   {space.occupantName && (
-                    <div className="text-[11px] text-slate-300 truncate">
+                    <div className="text-[10px] text-zinc-400 truncate font-sans">
                       {space.occupantName}
                     </div>
                   )}
 
                   {space.assignedUnitNumber && (
-                    <div className="text-[10px] text-slate-400">
-                      Unit: <span className="font-mono text-slate-200">{space.assignedUnitNumber}</span>
+                    <div className="text-[10px] text-zinc-500">
+                      Unit: <span className="text-zinc-300">{space.assignedUnitNumber}</span>
                     </div>
                   )}
                 </div>
@@ -220,62 +215,62 @@ export const ParkingMap: React.FC = () => {
 
       {/* Selected Space Detail Modal */}
       {selectedSpace && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="card-carbon-elevated max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div className="flex items-center gap-2">
-                <ParkingSquare className="w-5 h-5 text-sky-400" />
-                <h3 className="text-lg font-bold text-white font-mono">Parking Bay {selectedSpace.bayNumber}</h3>
+                <ParkingSquare className="w-4 h-4 text-emerald-400" />
+                <h3 className="text-base font-bold text-white font-mono">Bay Telemetry: {selectedSpace.bayNumber}</h3>
               </div>
               <button
                 onClick={() => setSelectedSpace(null)}
-                className="text-slate-400 hover:text-white font-bold"
+                className="text-zinc-400 hover:text-white font-mono text-sm"
               >
                 ✕
               </button>
             </div>
 
-            <div className="space-y-3 text-xs">
-              <div className="flex justify-between py-1 border-b border-slate-800">
-                <span className="text-slate-400">Parking Zone:</span>
+            <div className="space-y-2.5 text-xs font-mono">
+              <div className="flex justify-between py-1 border-b border-white/5">
+                <span className="text-zinc-500">ZONE</span>
                 <span className="text-white font-medium">{selectedSpace.zone}</span>
               </div>
 
-              <div className="flex justify-between py-1 border-b border-slate-800">
-                <span className="text-slate-400">Bay Type:</span>
-                <span className="text-sky-400 font-semibold">{selectedSpace.type}</span>
+              <div className="flex justify-between py-1 border-b border-white/5">
+                <span className="text-zinc-500">BAY TYPE</span>
+                <span className="text-emerald-400 font-semibold">{selectedSpace.type}</span>
               </div>
 
-              <div className="flex justify-between py-1 border-b border-slate-800">
-                <span className="text-slate-400">Current Status:</span>
+              <div className="flex justify-between py-1 border-b border-white/5">
+                <span className="text-zinc-500">CURRENT STATUS</span>
                 <span className="font-bold text-emerald-400 uppercase">{selectedSpace.status}</span>
               </div>
 
               {selectedSpace.currentVehiclePlate && (
-                <div className="flex justify-between py-1 border-b border-slate-800">
-                  <span className="text-slate-400">Vehicle Plate:</span>
-                  <span className="font-mono text-white font-bold">{selectedSpace.currentVehiclePlate}</span>
+                <div className="flex justify-between py-1 border-b border-white/5">
+                  <span className="text-zinc-500">VEHICLE PLATE</span>
+                  <span className="text-amber-300 font-bold">{selectedSpace.currentVehiclePlate}</span>
                 </div>
               )}
 
               {selectedSpace.occupantName && (
-                <div className="flex justify-between py-1 border-b border-slate-800">
-                  <span className="text-slate-400">Occupant Name:</span>
-                  <span className="text-slate-200 font-semibold">{selectedSpace.occupantName}</span>
+                <div className="flex justify-between py-1 border-b border-white/5 font-sans">
+                  <span className="text-zinc-500 font-mono">OCCUPANT</span>
+                  <span className="text-zinc-200 font-semibold">{selectedSpace.occupantName}</span>
                 </div>
               )}
 
               {selectedSpace.assignedUnitNumber && (
-                <div className="flex justify-between py-1 border-b border-slate-800">
-                  <span className="text-slate-400">Assigned Unit:</span>
-                  <span className="font-mono text-sky-300 font-bold">{selectedSpace.assignedUnitNumber}</span>
+                <div className="flex justify-between py-1 border-b border-white/5">
+                  <span className="text-zinc-500">ASSIGNED UNIT</span>
+                  <span className="text-zinc-200 font-bold">{selectedSpace.assignedUnitNumber}</span>
                 </div>
               )}
 
               {selectedSpace.entryTime && (
-                <div className="flex justify-between py-1 border-b border-slate-800">
-                  <span className="text-slate-400">Duration Parked:</span>
-                  <span className="text-amber-400 font-mono">{selectedSpace.entryTime}</span>
+                <div className="flex justify-between py-1 border-b border-white/5">
+                  <span className="text-zinc-500">PARK DURATION</span>
+                  <span className="text-amber-400">{selectedSpace.entryTime}</span>
                 </div>
               )}
             </div>
@@ -287,17 +282,17 @@ export const ParkingMap: React.FC = () => {
                     updateParkingSpaceStatus(selectedSpace.id, 'Available');
                     setSelectedSpace(null);
                   }}
-                  className="w-full py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold rounded-xl text-sm transition flex items-center justify-center gap-2"
+                  className="btn-tactile w-full py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold rounded-lg text-xs flex items-center justify-center gap-2"
                 >
-                  <RefreshCw className="w-4 h-4" />
-                  Release Bay & Mark Available
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Release Bay & Mark Available</span>
                 </button>
               ) : (
                 <button
                   onClick={() => setSelectedSpace(null)}
-                  className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-sm transition"
+                  className="btn-tactile w-full py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-semibold rounded-lg text-xs border border-white/10"
                 >
-                  Close Window
+                  Close Telemetry
                 </button>
               )}
             </div>

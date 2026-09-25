@@ -11,7 +11,9 @@ import {
   EyeOff, 
   UserCheck,
   ArrowLeft,
-  KeyRound
+  KeyRound,
+  ShieldAlert,
+  SlidersHorizontal
 } from 'lucide-react';
 
 interface AuthPortalProps {
@@ -26,20 +28,19 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({
   const [isSignUp, setIsSignUp] = useState(false);
   const [selectedRole, setSelectedRole] = useState<'Guard' | 'Resident' | 'Admin'>('Guard');
   
-  // Clean empty initial form state (no pre-filled accounts or dummy text)
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState('');
   const [unitOrGate, setUnitOrGate] = useState('');
 
-  // Optional quick demo fill helpers (only populates when explicitly clicked)
+  // Preset demo fillers
   const fillGuardPreset = () => {
     setSelectedRole('Guard');
     setEmail('officer.miller@sentinelguard.io');
     setPassword('GuardPass123!');
     setFullName('Officer Marcus Miller');
-    setUnitOrGate('Gate 1 (Primary Entry)');
+    setUnitOrGate('Gate 1 (Primary Lane)');
   };
 
   const fillResidentPreset = () => {
@@ -55,7 +56,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({
     setEmail('admin.security@sentinelguard.io');
     setPassword('AdminPass123!');
     setFullName('Director Alex Sterling');
-    setUnitOrGate('Security Command Center');
+    setUnitOrGate('Security Ops Center');
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -65,210 +66,195 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center p-4 relative overflow-hidden selection:bg-sky-500 selection:text-slate-950">
-      {/* Background Ambient Glow */}
-      <div className="absolute top-1/4 left-1/3 w-[500px] h-[500px] bg-sky-500/10 rounded-full blur-[140px] pointer-events-none"></div>
+    <div className="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col justify-center items-center p-4 relative overflow-hidden">
+      {/* Subtle Dot Matrix Background */}
+      <div 
+        className="absolute inset-0 opacity-20 pointer-events-none"
+        style={{
+          backgroundImage: 'radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px)',
+          backgroundSize: '24px 24px'
+        }}
+      />
 
-      <div className="max-w-md w-full space-y-5 relative z-10">
-        {/* Back Button & Logo */}
+      <div className="max-w-md w-full space-y-4 relative z-10">
+        {/* Navigation & Header */}
         <div className="flex items-center justify-between">
           <button
             onClick={onBackToLanding}
-            className="text-xs text-slate-400 hover:text-white transition flex items-center gap-1.5 font-medium"
+            className="btn-tactile text-xs text-zinc-400 hover:text-white transition flex items-center gap-1.5 font-medium px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-white/5"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Home
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Return to Console</span>
           </button>
 
           <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-sky-500/10 border border-sky-500/30 rounded-lg text-sky-400">
-              <ShieldCheck className="w-5 h-5" />
+            <div className="w-6 h-6 rounded-md bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <ShieldCheck className="w-3.5 h-3.5" />
             </div>
-            <span className="font-bold text-white text-sm">SentinelGuard Portal</span>
+            <span className="font-mono font-bold text-white text-xs">SENTINEL_AUTH</span>
           </div>
         </div>
 
-        {/* Main Form Card */}
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-7 shadow-2xl space-y-6 backdrop-blur-xl">
-          {/* Header */}
-          <div className="text-center space-y-1.5">
-            <h2 className="text-2xl font-black text-white tracking-tight">
-              {isSignUp ? 'Create SentinelGuard Account' : 'Sign In to Portal'}
+        {/* Main Hardware Bezel Card */}
+        <div className="card-carbon-elevated p-7 space-y-6">
+          <div className="text-center space-y-1">
+            <h2 className="text-xl font-bold text-white tracking-tight">
+              {isSignUp ? 'Enroll New Personnel' : 'Authentication Terminal'}
             </h2>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-zinc-400">
               {isSignUp
-                ? 'Register your account to access guardhouse controls or host pass features'
-                : 'Select your account role and enter your credentials to log in'}
+                ? 'Register security profile for gatehouse or tenant clearance'
+                : 'Select role credentials to authorize access'}
             </p>
           </div>
 
-          {/* Role Selector Tabs */}
+          {/* Role Segmented Switcher */}
           <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block text-center">
-              Select Role & Access Level:
+            <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block text-center">
+              CLEARANCE LEVEL & PROFILE
             </label>
-            <div className="grid grid-cols-3 gap-2 bg-slate-950 p-1.5 rounded-2xl border border-slate-800">
-              <button
-                type="button"
-                onClick={() => setSelectedRole('Guard')}
-                className={`py-2 px-1 rounded-xl text-xs font-bold transition ${
-                  selectedRole === 'Guard'
-                    ? 'bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                👮 Guard
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedRole('Resident')}
-                className={`py-2 px-1 rounded-xl text-xs font-bold transition ${
-                  selectedRole === 'Resident'
-                    ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/20'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                🏠 Resident
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedRole('Admin')}
-                className={`py-2 px-1 rounded-xl text-xs font-bold transition ${
-                  selectedRole === 'Admin'
-                    ? 'bg-teal-500 text-slate-950 shadow-md shadow-teal-500/20'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                📊 Admin
-              </button>
+            <div className="grid grid-cols-3 gap-1 bg-zinc-950 p-1 rounded-lg border border-white/10">
+              {(['Guard', 'Resident', 'Admin'] as const).map((role) => (
+                <button
+                  key={role}
+                  type="button"
+                  onClick={() => setSelectedRole(role)}
+                  className={`btn-tactile py-2 rounded text-xs font-mono font-semibold transition ${
+                    selectedRole === role
+                      ? 'bg-zinc-800 text-emerald-400 border border-emerald-500/30 shadow-sm'
+                      : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  {role}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Optional Demo Auto-Fill Presets */}
-          <div className="text-center">
-            <span className="text-[10px] text-slate-500 block mb-1">Testing Demo Credentials:</span>
-            <div className="flex justify-center gap-2">
+          {/* Quick Demo Pre-load Credentials */}
+          <div className="text-center pt-0.5">
+            <span className="text-[10px] font-mono text-zinc-500 block mb-1">DEMO PRESETS:</span>
+            <div className="flex justify-center gap-3 text-[11px] font-mono">
               <button
                 type="button"
                 onClick={fillGuardPreset}
-                className="text-[10px] text-sky-400 hover:text-sky-300 underline font-medium"
+                className="text-zinc-400 hover:text-emerald-400 underline decoration-zinc-700 underline-offset-2 transition-colors"
               >
-                Auto-fill Guard Demo
+                Officer
               </button>
-              <span className="text-slate-700">•</span>
+              <span className="text-zinc-700">•</span>
               <button
                 type="button"
                 onClick={fillResidentPreset}
-                className="text-[10px] text-indigo-400 hover:text-indigo-300 underline font-medium"
+                className="text-zinc-400 hover:text-emerald-400 underline decoration-zinc-700 underline-offset-2 transition-colors"
               >
-                Auto-fill Resident Demo
+                Resident
               </button>
-              <span className="text-slate-700">•</span>
+              <span className="text-zinc-700">•</span>
               <button
                 type="button"
                 onClick={fillAdminPreset}
-                className="text-[10px] text-teal-400 hover:text-teal-300 underline font-medium"
+                className="text-zinc-400 hover:text-emerald-400 underline decoration-zinc-700 underline-offset-2 transition-colors"
               >
-                Auto-fill Admin Demo
+                Admin
               </button>
             </div>
           </div>
 
-          {/* Authentication Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Credentials Form */}
+          <form onSubmit={handleSubmit} className="space-y-3.5">
             {isSignUp && (
               <div>
-                <label className="text-xs text-slate-300 font-semibold block mb-1">Full Name</label>
+                <label className="text-[11px] font-mono text-zinc-400 block mb-1">Full Name</label>
                 <div className="relative">
                   <input
                     type="text"
                     required={isSignUp}
-                    placeholder="Enter your full name..."
+                    placeholder="Enter identity name..."
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500"
+                    className="w-full bg-zinc-950 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
                   />
-                  <User className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+                  <User className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-2.5" />
                 </div>
               </div>
             )}
 
             <div>
-              <label className="text-xs text-slate-300 font-semibold block mb-1">Email / Officer ID</label>
+              <label className="text-[11px] font-mono text-zinc-400 block mb-1">Officer Email / ID</label>
               <div className="relative">
                 <input
                   type="email"
                   required
-                  placeholder="name@domain.com"
+                  placeholder="identity@sentinelguard.io"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500"
+                  className="w-full bg-zinc-950 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 font-mono"
                 />
-                <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+                <Mail className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-2.5" />
               </div>
             </div>
 
             <div>
-              <label className="text-xs text-slate-300 font-semibold block mb-1">Password</label>
+              <label className="text-[11px] font-mono text-zinc-400 block mb-1">Access Token / Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
-                  placeholder="Enter your password..."
+                  placeholder="••••••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-10 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 font-mono tracking-wide"
+                  className="w-full bg-zinc-950 border border-white/10 rounded-lg pl-9 pr-10 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 font-mono"
                 />
-                <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+                <Lock className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-2.5" />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 p-1 text-slate-400 hover:text-white transition rounded-lg"
-                  title={showPassword ? 'Hide Password' : 'Show Password'}
+                  className="absolute right-3 top-2 p-0.5 text-zinc-500 hover:text-zinc-200 transition"
                 >
                   {showPassword ? (
-                    <EyeOff className="w-4 h-4 text-sky-400" />
+                    <EyeOff className="w-3.5 h-3.5 text-emerald-400" />
                   ) : (
-                    <Eye className="w-4 h-4 text-slate-400" />
+                    <Eye className="w-3.5 h-3.5" />
                   )}
                 </button>
               </div>
             </div>
 
             <div>
-              <label className="text-xs text-slate-300 font-semibold block mb-1">
-                Assigned Unit / Guard Station (Optional)
+              <label className="text-[11px] font-mono text-zinc-400 block mb-1">
+                Post / Unit Assignment
               </label>
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="e.g. Gate 1 Guardhouse or Unit A-101"
+                  placeholder="e.g. Gate 1 or Unit A-101"
                   value={unitOrGate}
                   onChange={(e) => setUnitOrGate(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 font-mono"
+                  className="w-full bg-zinc-950 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 font-mono"
                 />
-                <Building2 className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+                <Building2 className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-2.5" />
               </div>
             </div>
 
             <button
               type="submit"
-              className="w-full py-3 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-slate-950 font-extrabold text-sm rounded-xl transition shadow-lg shadow-sky-500/25 flex items-center justify-center gap-2 mt-2"
+              className="btn-tactile w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs rounded-lg transition shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 mt-3"
             >
               <UserCheck className="w-4 h-4" />
-              {isSignUp ? 'Create Account & Log In' : `Sign In as ${selectedRole}`}
+              <span>{isSignUp ? 'Enroll Profile' : `Authenticate as ${selectedRole}`}</span>
             </button>
           </form>
 
           {/* Toggle Sign Up / Sign In */}
-          <div className="text-center text-xs text-slate-400 border-t border-slate-800 pt-4">
-            {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+          <div className="text-center text-xs text-zinc-400 border-t border-white/5 pt-3">
+            {isSignUp ? 'Already registered?' : 'Need temporary clearance?'}{' '}
             <button
               type="button"
               onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sky-400 font-bold hover:underline"
+              className="text-emerald-400 font-mono font-semibold hover:underline"
             >
-              {isSignUp ? 'Sign In Here' : 'Create Account'}
+              {isSignUp ? 'Return to Login' : 'Enroll Credentials'}
             </button>
           </div>
         </div>
