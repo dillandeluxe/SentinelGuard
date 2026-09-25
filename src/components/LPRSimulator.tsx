@@ -13,7 +13,11 @@ import {
   Building2, 
   Play, 
   ArrowRight,
-  RefreshCw
+  RefreshCw,
+  Cpu,
+  Target,
+  Crosshair,
+  Gauge
 } from 'lucide-react';
 
 export const LPRSimulator: React.FC = () => {
@@ -22,10 +26,10 @@ export const LPRSimulator: React.FC = () => {
   const [isScanning, setIsScanning] = useState(false);
 
   const presets = [
-    { label: 'Resident Plate (Sarah J. - A-101)', plate: 'SJK-8821' },
-    { label: 'Registered Guest Plate (Liam H. - A-101)', plate: 'LHM-4491' },
-    { label: 'Unknown Visitor Plate (Walk-In)', plate: 'UNK-9941' },
-    { label: 'Contractor Plate (Apex Plumbing)', plate: 'PLUMB-9' },
+    { label: 'Sarah Jenkins (Resident)', plate: 'SJK-8821', type: 'Resident' },
+    { label: 'Liam Hayes (Guest Pass)', plate: 'LHM-4491', type: 'Expected Guest' },
+    { label: 'Unregistered Courier', plate: 'UNK-9941', type: 'Unregistered' },
+    { label: 'Apex Plumbing Corp', plate: 'PLUMB-9', type: 'Contractor' },
   ];
 
   const handleSimulate = (plate: string) => {
@@ -33,79 +37,114 @@ export const LPRSimulator: React.FC = () => {
     setTimeout(() => {
       simulateLPRScan(plate);
       setIsScanning(false);
-    }, 800);
+    }, 700);
   };
 
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-purple-500/10 border border-purple-500/30 text-purple-400 rounded-xl">
-            <Camera className="w-7 h-7" />
+      {/* Precision Header */}
+      <div className="card-carbon-elevated p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 shrink-0">
+            <Camera className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              LPR / ANPR Camera Vision Feed (Gate 1 & Gate 2)
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                AI Powered 99.4% Acc.
+            <div className="flex items-center gap-2.5">
+              <h3 className="text-lg font-bold text-white tracking-tight">Optical LPR & Edge Vision Pipeline</h3>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+                EDGE INFERENCE 99.4%
               </span>
-            </h3>
-            <p className="text-xs text-slate-400">Simulate incoming vehicle plates to trigger automatic gate barrier and guest match</p>
+            </div>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              High-speed neural plate recognition for automated barrier actuation and access audits
+            </p>
           </div>
+        </div>
+
+        <div className="flex items-center gap-2 text-[11px] font-mono text-zinc-400">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span>CAM-01 / CAM-02 RTSP SYNC</span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Simulated Camera Viewport & Controls */}
+        {/* Left Column: Optical HUD Viewfinder */}
         <div className="lg:col-span-7 space-y-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
-                LIVE STREAM: Gate 1 (Primary Entry Lane)
-              </span>
-              <span className="text-xs font-mono text-purple-400">RTSP Stream 1080p @ 30FPS</span>
+          <div className="card-carbon p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+                </span>
+                <span className="text-xs font-mono font-bold text-zinc-200">FEED: GATE-01 PRIMARY APPROACH</span>
+              </div>
+              <span className="text-[11px] font-mono text-emerald-400">1080p @ 60 FPS • 14ms</span>
             </div>
 
-            {/* Camera Simulated Viewport */}
-            <div className="relative h-64 bg-slate-950 rounded-xl border border-slate-800 overflow-hidden flex flex-col items-center justify-center p-4 group">
-              {/* Scan Overlay Lines */}
-              <div className="absolute inset-0 border-2 border-purple-500/30 rounded-xl pointer-events-none"></div>
-              
+            {/* Tactical Viewfinder Viewport */}
+            <div className="relative h-72 bg-zinc-950 rounded-xl border border-white/10 overflow-hidden flex flex-col items-center justify-center p-6 group">
+              {/* Subtle Grid Matrix */}
+              <div 
+                className="absolute inset-0 opacity-15 pointer-events-none"
+                style={{
+                  backgroundImage: 'radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px)',
+                  backgroundSize: '20px 20px'
+                }}
+              />
+
+              {/* Tactical Corner Reticles */}
+              <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-emerald-500/60 pointer-events-none" />
+              <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-emerald-500/60 pointer-events-none" />
+              <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-emerald-500/60 pointer-events-none" />
+              <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-emerald-500/60 pointer-events-none" />
+
+              {/* Animated Laser Sweep Line */}
               {isScanning && (
-                <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-purple-400 to-transparent top-0 animate-bounce"></div>
+                <div className="absolute inset-x-0 h-[2px] bg-emerald-400 shadow-[0_0_12px_#10b981] animate-laser-scan pointer-events-none z-20" />
               )}
 
-              {/* Simulated Vehicle Target Box */}
-              <div className="relative z-10 p-6 bg-slate-900/90 border border-purple-500/50 rounded-2xl text-center space-y-3 shadow-2xl backdrop-blur-md max-w-sm w-full">
-                <div className="flex items-center justify-center gap-2 text-slate-400 text-xs">
-                  <Scan className="w-4 h-4 text-purple-400 animate-spin" />
-                  <span>Optical Character Recognition Active</span>
+              {/* Target Bounding Box & Stamped Plate */}
+              <div className="relative z-10 p-5 bg-zinc-900/90 border border-white/15 rounded-xl text-center space-y-3 shadow-2xl backdrop-blur-md max-w-xs w-full transition-transform duration-300">
+                <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400 pb-1 border-b border-white/10">
+                  <span className="flex items-center gap-1 text-emerald-400">
+                    <Crosshair className="w-3 h-3" />
+                    BBOX TARGET #1
+                  </span>
+                  <span>CONF 99.6%</span>
                 </div>
 
-                <div className="bg-amber-400 border-2 border-black text-slate-950 font-mono font-extrabold text-2xl py-2 px-6 rounded-lg tracking-wider shadow-inner inline-block">
-                  {testPlateInput || 'SJK-8821'}
+                {/* Stamped Metal License Plate */}
+                <div className="relative inline-block bg-zinc-950 border-2 border-zinc-700 text-white font-mono font-extrabold text-2xl py-2 px-6 rounded-lg tracking-widest shadow-inner">
+                  <div className="absolute -top-1.5 left-2 w-1.5 h-1.5 rounded-full bg-zinc-600 border border-zinc-400" />
+                  <div className="absolute -top-1.5 right-2 w-1.5 h-1.5 rounded-full bg-zinc-600 border border-zinc-400" />
+                  <div className="text-amber-400 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+                    {testPlateInput || 'SJK-8821'}
+                  </div>
+                  <div className="text-[8px] font-mono text-zinc-500 tracking-widest mt-0.5">
+                    CALIFORNIA RESIDENT
+                  </div>
                 </div>
 
-                <p className="text-[11px] text-purple-300 font-mono">
-                  {isScanning ? 'Processing Neural Vision Model...' : 'Ready for Detection'}
-                </p>
+                <div className="flex items-center justify-center gap-2 text-[10px] font-mono text-zinc-400">
+                  <Cpu className="w-3 h-3 text-emerald-400" />
+                  <span>{isScanning ? 'INFERRING NEURAL WEIGHTS...' : 'OPTICAL MATRIX LOCKED'}</span>
+                </div>
               </div>
 
-              {/* Camera Corner HUD Overlay */}
-              <div className="absolute top-3 left-3 text-[10px] font-mono text-emerald-400 bg-slate-950/80 px-2 py-1 rounded border border-emerald-500/30">
-                CAM-01: OK
+              {/* Viewfinder Telemetry Overlays */}
+              <div className="absolute top-3 left-8 text-[10px] font-mono text-emerald-400/80 bg-zinc-950/80 px-2 py-0.5 rounded border border-white/5">
+                EXP: 1/2000s • ISO 400 • F/2.8
               </div>
-              <div className="absolute bottom-3 right-3 text-[10px] font-mono text-slate-400 bg-slate-950/80 px-2 py-1 rounded border border-slate-800">
-                1920x1080 • HDR ON
+              <div className="absolute bottom-3 right-8 text-[10px] font-mono text-zinc-500 bg-zinc-950/80 px-2 py-0.5 rounded border border-white/5">
+                FPS 60.1 • LATENCY 14.2ms
               </div>
             </div>
 
-            {/* Simulation Trigger Preset Controls */}
-            <div className="space-y-3 pt-2">
-              <label className="text-xs text-slate-400 font-medium block">
-                Test Camera Detection (Click a Preset to Simulate Vehicle Approach):
+            {/* Quick Trigger Presets */}
+            <div className="space-y-2.5 pt-1">
+              <label className="text-[11px] font-mono text-zinc-400 block">
+                Simulate Vehicle Approach (Tap to trigger test capture):
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {presets.map((preset) => (
@@ -115,19 +154,25 @@ export const LPRSimulator: React.FC = () => {
                       setTestPlateInput(preset.plate);
                       handleSimulate(preset.plate);
                     }}
-                    className="p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-purple-500/50 rounded-xl text-left transition group"
+                    disabled={isScanning}
+                    className="btn-tactile p-3 bg-zinc-950 hover:bg-zinc-900 border border-white/5 hover:border-emerald-500/40 rounded-lg text-left transition group disabled:opacity-50"
                   >
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-slate-200 group-hover:text-purple-300">{preset.label}</span>
-                      <span className="font-mono text-[10px] bg-slate-900 px-1.5 py-0.5 rounded text-amber-400 border border-amber-500/20">
-                        {preset.plate}
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="font-semibold text-zinc-200 group-hover:text-emerald-300 transition-colors">
+                        {preset.label}
                       </span>
+                      <span className="text-[9px] font-mono uppercase px-1.5 py-0.2 rounded bg-zinc-900 border border-white/10 text-zinc-400">
+                        {preset.type}
+                      </span>
+                    </div>
+                    <div className="font-mono text-xs font-bold text-amber-300">
+                      {preset.plate}
                     </div>
                   </button>
                 ))}
               </div>
 
-              {/* Custom Plate Input Form */}
+              {/* Custom Input */}
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -137,75 +182,74 @@ export const LPRSimulator: React.FC = () => {
               >
                 <input
                   type="text"
-                  placeholder="Enter custom license plate..."
+                  placeholder="Enter custom plate code..."
                   value={testPlateInput}
                   onChange={(e) => setTestPlateInput(e.target.value.toUpperCase())}
-                  className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                  className="flex-1 bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
                 />
                 <button
                   type="submit"
                   disabled={isScanning || !testPlateInput}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-bold rounded-xl text-xs transition flex items-center gap-1.5"
+                  className="btn-tactile px-4 py-2 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:pointer-events-none text-zinc-950 font-bold rounded-lg text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/15"
                 >
                   <Play className="w-3.5 h-3.5" />
-                  Simulate LPR Capture
+                  <span>Simulate Capture</span>
                 </button>
               </form>
             </div>
           </div>
         </div>
 
-        {/* Right Column: LPR Detections Audit History */}
+        {/* Right Column: LPR Inference Audit History */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <span className="text-sm font-bold text-white flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-purple-400" />
-                Recent LPR Detections & Match Audit
-              </span>
-              <span className="text-xs text-slate-500 font-mono">{lprDetections.length} Scans</span>
+          <div className="card-carbon p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <div className="flex items-center gap-2">
+                <Target className="w-4 h-4 text-emerald-400" />
+                <h3 className="text-sm font-semibold text-white">Detection Inference Ledger</h3>
+              </div>
+              <span className="text-[11px] font-mono text-zinc-500">{lprDetections.length} logs</span>
             </div>
 
-            <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
+            <div className="space-y-2.5 max-h-[440px] overflow-y-auto pr-1">
               {lprDetections.map((detection) => {
                 const isResident = detection.matchedStatus === 'Resident_Approved';
                 const isGuest = detection.matchedStatus === 'PreRegistered_Guest';
-                const isUnknown = detection.matchedStatus === 'Unknown_Vehicle';
 
                 return (
                   <div
                     key={detection.id}
-                    className="p-3.5 bg-slate-950 border border-slate-800 rounded-xl space-y-2 hover:border-slate-700 transition"
+                    className="p-3 bg-zinc-950/70 border border-white/5 rounded-lg space-y-2 hover:border-white/15 transition"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-mono font-extrabold text-sm text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/30">
+                      <span className="font-mono font-bold text-xs text-amber-300 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/20">
                         {detection.plateNumber}
                       </span>
-                      <span className="text-[10px] font-mono text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
-                        Confidence: {detection.confidence}%
+                      <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                        CONF {detection.confidence}%
                       </span>
                     </div>
 
                     <div className="text-xs space-y-1">
                       <div className="flex items-center justify-between">
-                        <span className="text-slate-400">Matched Record:</span>
-                        <span className={`font-semibold ${
-                          isResident ? 'text-emerald-400' : isGuest ? 'text-sky-400' : 'text-rose-400'
+                        <span className="text-zinc-500 text-[11px]">Match</span>
+                        <span className={`font-medium ${
+                          isResident ? 'text-emerald-400' : isGuest ? 'text-zinc-200' : 'text-rose-400'
                         }`}>
                           {detection.matchedName || 'Unregistered Vehicle'}
                         </span>
                       </div>
 
                       {detection.matchedUnit && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-400">Associated Unit:</span>
-                          <span className="font-mono text-sky-300 font-bold">{detection.matchedUnit}</span>
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="text-zinc-500">Unit</span>
+                          <span className="font-mono text-zinc-300">{detection.matchedUnit}</span>
                         </div>
                       )}
 
-                      <div className="flex items-center justify-between pt-1 border-t border-slate-900">
-                        <span className="text-slate-500 font-mono text-[10px]">{detection.timestamp}</span>
-                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
+                      <div className="flex items-center justify-between pt-1 border-t border-white/5 text-[10px] font-mono">
+                        <span className="text-zinc-500">{detection.timestamp}</span>
+                        <span className={`px-1.5 py-0.5 rounded font-bold uppercase ${
                           detection.suggestedAction === 'Auto_Open_Gate'
                             ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
                             : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
