@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Unit, VisitorPass, VisitorLog, ParkingSpace, LPRDetection } from './types';
+import { isPassUsable, isPassExpired, isOverstay } from './rules';
 import { initialUnits, initialVisitorPasses, initialVisitorLogs, initialParkingSpaces, initialLPRDetections } from './mockData';
 
 interface SystemContextType {
@@ -46,7 +47,7 @@ const loadSaved = (): Partial<Pick<SystemContextType, 'units' | 'visitorPasses' 
 };
 
 // Mounted only after login (client-side), so reading storage in initial state can't cause a hydration mismatch.
-export const SystemProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const SystemProvider: React.FC<{ children: React.ReactNode; guardName?: string }> = ({ children, guardName = 'Unknown Officer' }) => {
   const [saved] = useState(loadSaved);
   const [units, setUnits] = useState<Unit[]>(saved.units ?? initialUnits);
   const [visitorPasses, setVisitorPasses] = useState<VisitorPass[]>(saved.visitorPasses ?? initialVisitorPasses);
@@ -61,6 +62,23 @@ export const SystemProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // storage full or blocked (private mode): keep working in memory
     }
   }, [units, visitorPasses, visitorLogs, parkingSpaces, lprDetections]);
+
+  // Expire stale passes and flag overstays once a minute; both rules live in ./rules.
+  useEffect(() => {
+    const tick = () => {
+      const now = Date.now();
+      setVisitorPasses((prev) =>
+        prev.some((p) => isPassExpired(p, now)) ? prev.map((p) => (isPassExpired(p, now) ? { ...p, status: 'Expired' } : p)) : prev
+      );
+      setParkingSpaces((prev) =>
+        prev.some((s) => isOverstay(s, now)) ? prev.map((s) => (isOverstay(s, now) ? { ...s, status: 'Overstay_Warning' } : s)) : prev
+      );
+    };
+    tick();
+    const id = setInterval(tick, 60_000);
+    return () => clearInterval(id);
+  }, []);
+
   const [gateStatus, setGateStatus] = useState<'Closed' | 'Opening' | 'Open' | 'Hold'>('Closed');
   const [activeGateMessage, setActiveGateMessage] = useState<string | null>(null);
 
@@ -94,7 +112,7 @@ export const SystemProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const checkInVisitor = (passId: string, parkingBayId?: string) => {
     const pass = visitorPasses.find((p) => p.id === passId || p.passCode === passId);
-    if (!pass) return;
+    if (!pass || !isPassUsable(pass)) return;
 
     // Update pass status
     setVisitorPasses((prev) =>
@@ -104,12 +122,13 @@ export const SystemProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Create log
     const newLog: VisitorLog = {
       id: `vl-${Date.now()}`,
+      passId: pass.id,
       guestName: pass.guestName,
       visitorType: pass.visitorType,
       unitNumber: pass.unitNumber,
       vehiclePlate: pass.vehiclePlate,
       entryTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      guardName: 'Officer Miller',
+      guardName,
       assignedParkingBay: parkingBayId || pass.assignedParkingBay || 'V-01',
       status: 'Inside',
     };
@@ -127,7 +146,7 @@ export const SystemProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 currentVehiclePlate: pass.vehiclePlate,
                 assignedUnitNumber: pass.unitNumber,
                 occupantName: pass.guestName,
-                entryTime: 'Just now',
+                entryTime: new Date().toISOString(),
               }
             : ps
         )
@@ -152,7 +171,7 @@ export const SystemProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       unitNumber: data.unitNumber,
       vehiclePlate: data.vehiclePlate,
       entryTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      guardName: 'Officer Miller',
+      guardName,
       assignedParkingBay: data.assignedParkingBay || 'V-05',
       status: 'Inside',
       notes: data.notes,
@@ -169,7 +188,7 @@ export const SystemProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 currentVehiclePlate: data.vehiclePlate,
                 assignedUnitNumber: data.unitNumber,
                 occupantName: data.guestName,
-                entryTime: 'Just now',
+                entryTime: new Date().toISOString(),
               }
             : ps
         )
@@ -200,10 +219,15 @@ export const SystemProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setParkingSpaces((prev) =>
         prev.map((ps) =>
           ps.bayNumber === log.assignedParkingBay
-            ? { ...ps, status: 'Available', currentVehiclePlate: undefined, occupantName: undefined, assignedUnitNumber: undefined }
+            ? { ...ps, status: 'Available', currentVehiclePlate: undefined, occupantName: undefined, assignedUnitNumber: undefined, entryTime: undefined }
             : ps
         )
       );
+    }
+
+    // Close the pass so the same QR can't be reused after the guest leaves.
+    if (log.passId) {
+      setVisitorPasses((prev) => prev.map((p) => (p.id === log.passId ? { ...p, status: 'Completed' } : p)));
     }
   };
 
@@ -222,7 +246,9 @@ export const SystemProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const updateParkingSpaceStatus = (spaceId: string, status: ParkingSpace['status'], plate?: string, occupant?: string) => {
     setParkingSpaces((prev) =>
       prev.map((ps) =>
-        ps.id === spaceId ? { ...ps, status, currentVehiclePlate: plate, occupantName: occupant } : ps
+        ps.id === spaceId
+          ? { ...ps, status, currentVehiclePlate: plate, occupantName: occupant, ...(status === 'Available' && { assignedUnitNumber: undefined, entryTime: undefined }) }
+          : ps
       )
     );
   };
@@ -230,7 +256,7 @@ export const SystemProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const simulateLPRScan = (plateNumber: string) => {
     const residentUnit = units.find((u) => u.registeredVehicles.includes(plateNumber.toUpperCase()));
     const guestPass = visitorPasses.find(
-      (p) => p.vehiclePlate?.toUpperCase() === plateNumber.toUpperCase() && p.status === 'Active'
+      (p) => p.vehiclePlate?.toUpperCase() === plateNumber.toUpperCase() && isPassUsable(p)
     );
 
     let matchStatus: LPRDetection['matchedStatus'] = 'Unknown_Vehicle';

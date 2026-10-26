@@ -88,28 +88,30 @@ export default function Home() {
   }
 
   return (
-    <SystemProvider>
-      <div className="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-black">
+    <SystemProvider guardName={currentUser?.name}>
+      <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-black">
         {/* Precision Hardware Top Bar */}
-        <header className="bg-zinc-950/80 backdrop-blur-xl border-b border-white/10 sticky top-0 z-40">
+        <header className="bg-slate-950/80 backdrop-blur-xl border-b border-white/10 sticky top-0 z-40">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
             {/* Brand Logo & Telemetry Indicator */}
             <div className="flex items-center gap-3">
-              <div
+              <button
+                type="button"
                 onClick={() => setViewState('Landing')}
-                className="btn-tactile w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 cursor-pointer shadow-sm shadow-emerald-500/20"
+                aria-label="Return to landing page"
+                className="btn-tactile w-11 h-11 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 cursor-pointer shadow-sm shadow-emerald-500/20"
                 title="Return to Landing"
               >
                 <ShieldCheck className="w-5 h-5" />
-              </div>
+              </button>
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-sm font-bold text-white tracking-tight">SentinelGuard</h1>
-                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-900 border border-white/10 text-emerald-400">
+                  <span className="text-xs font-mono px-1.5 py-0.2 rounded bg-slate-900 border border-white/10 text-emerald-400">
                     EDGE OS v2.4
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-500">
+                <div className="flex items-center gap-2 text-xs font-mono text-slate-500">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   <span>STATION 01 • ACTIVE</span>
                 </div>
@@ -117,15 +119,15 @@ export default function Home() {
             </div>
 
             {/* Hardware Segmented Navigation Switcher */}
-            <nav className="flex items-center gap-1 bg-zinc-900/90 p-1 rounded-lg border border-white/10 overflow-x-auto max-w-full">
+            <nav className="flex items-center gap-1 bg-slate-900/90 p-1 rounded-lg border border-white/10 overflow-x-auto max-w-full">
               {tabs.map(({ id, label, Icon }) => (
                 <button
                   key={id}
                   onClick={() => setActiveTab(id)}
-                  className={`btn-tactile px-3 py-1.5 rounded text-xs font-mono font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
+                  className={`btn-tactile px-3 min-h-11 rounded text-sm font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
                     activeTab === id
-                      ? 'bg-zinc-800 text-emerald-400 border border-emerald-500/30 shadow-sm'
-                      : 'text-zinc-400 hover:text-zinc-200'
+                      ? 'bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -138,17 +140,18 @@ export default function Home() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowChecklistModal(true)}
-                className="btn-tactile px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-white/10 rounded-lg text-xs font-mono flex items-center gap-1.5 transition"
+                aria-label="Production readiness checklist"
+                className="btn-tactile px-3 min-h-11 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-white/10 rounded-lg text-sm flex items-center gap-1.5 transition"
               >
                 <FileCheck className="w-3.5 h-3.5 text-emerald-400" />
                 <span className="hidden sm:inline">Readiness</span>
               </button>
 
               {currentUser && (
-                <div className="flex items-center gap-2 bg-zinc-900 px-2.5 py-1.5 rounded-lg border border-white/10 text-xs">
+                <div className="flex items-center gap-2 bg-slate-900 px-2.5 py-1.5 rounded-lg border border-white/10 text-xs">
                   <User className="w-3.5 h-3.5 text-emerald-400" />
                   <span className="font-medium text-white max-w-[120px] truncate">{currentUser.name}</span>
-                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-300 border border-white/5">
+                  <span className="text-xs font-mono font-bold px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 border border-white/5">
                     {currentUser.role}
                   </span>
                 </div>
@@ -156,7 +159,8 @@ export default function Home() {
 
               <button
                 onClick={handleLogout}
-                className="btn-tactile p-1.5 text-zinc-400 hover:text-rose-400 bg-zinc-900 hover:bg-rose-500/10 rounded-lg border border-white/10 transition"
+                aria-label="Log out"
+                className="btn-tactile w-11 h-11 flex items-center justify-center text-slate-400 hover:text-rose-400 bg-slate-900 hover:bg-rose-500/10 rounded-lg border border-white/10 transition"
                 title="Disconnect Session"
               >
                 <LogOut className="w-4 h-4" />

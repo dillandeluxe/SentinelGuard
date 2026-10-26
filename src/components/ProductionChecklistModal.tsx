@@ -29,12 +29,12 @@ export const ProductionChecklistModal: React.FC<ProductionChecklistModalProps> =
             </div>
             <div>
               <h3 className="text-base font-bold text-white tracking-tight">Production Hardware & SLA Readiness</h3>
-              <p className="text-xs text-zinc-400">Security audit verification from prototype to edge deployment</p>
+              <p className="text-xs text-slate-400">Security audit verification from prototype to edge deployment</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="btn-tactile p-2 text-zinc-400 hover:text-white bg-zinc-900 border border-white/10 rounded-lg text-xs"
+            className="btn-tactile p-2 text-slate-400 hover:text-white bg-slate-900 border border-white/10 rounded-lg text-xs"
           >
             <X className="w-4 h-4" />
           </button>
@@ -49,7 +49,7 @@ export const ProductionChecklistModal: React.FC<ProductionChecklistModalProps> =
             return (
               <div
                 key={item.id}
-                className="p-4 bg-zinc-950/70 border border-white/5 rounded-xl space-y-2 hover:border-white/15 transition"
+                className="p-4 bg-slate-950/70 border border-white/5 rounded-xl space-y-2 hover:border-white/15 transition"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-2">
@@ -61,26 +61,26 @@ export const ProductionChecklistModal: React.FC<ProductionChecklistModalProps> =
                     <h4 className="text-xs font-semibold text-white">{item.title}</h4>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0 font-mono text-[10px]">
+                  <div className="flex items-center gap-2 shrink-0 font-mono text-xs">
                     <span className={`px-2 py-0.5 rounded uppercase font-bold ${
                       isCritical ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30' : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
                     }`}>
                       {item.priority}
                     </span>
                     <span className={`px-2 py-0.5 rounded ${
-                      isCompleted ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-zinc-800 text-zinc-400'
+                      isCompleted ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400'
                     }`}>
                       {isCompleted ? 'VERIFIED' : 'PENDING'}
                     </span>
                   </div>
                 </div>
 
-                <p className="text-xs text-zinc-400 leading-relaxed pl-6">
+                <p className="text-xs text-slate-400 leading-relaxed pl-6">
                   {item.description}
                 </p>
 
                 <div className="pl-6 pt-0.5">
-                  <span className="text-[10px] font-mono text-zinc-500">
+                  <span className="text-xs font-mono text-slate-500">
                     CATEGORY: {item.category.toUpperCase()}
                   </span>
                 </div>
@@ -93,7 +93,7 @@ export const ProductionChecklistModal: React.FC<ProductionChecklistModalProps> =
         <div className="pt-2 border-t border-white/10 flex justify-end">
           <button
             onClick={onClose}
-            className="btn-tactile px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold rounded-lg text-xs"
+            className="btn-tactile px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-lg text-xs"
           >
             Close Telemetry Roadmap
           </button>

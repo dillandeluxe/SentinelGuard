@@ -21,15 +21,15 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#09090b" />
+        <meta name="theme-color" content="#0F172A" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body className="bg-[#09090b] text-zinc-100 antialiased selection:bg-emerald-500 selection:text-black">
+      <body className="bg-slate-900 text-slate-100 antialiased selection:bg-emerald-500 selection:text-black">
         {children}
       </body>
     </html>

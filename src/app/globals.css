@@ -1,36 +1,66 @@
 @import "tailwindcss";
 
+/* Design system: ui-ux-pro-max "SentinelGuard" — Swiss minimal, vault navy + secure green, Fira Sans/Code */
+@theme {
+  --font-sans: 'Fira Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
 :root {
-  --canvas: #09090b;
-  --surface: #111114;
-  --surface-elevated: #16161a;
+  --canvas: #0F172A;
+  --surface: #192134;
+  --surface-elevated: #1E293B;
   --border: rgba(255, 255, 255, 0.08);
   --border-subtle: rgba(255, 255, 255, 0.04);
   --border-focus: rgba(255, 255, 255, 0.2);
-  --text-main: #f4f4f5;
-  --text-muted: #a1a1aa;
-  --text-subtle: #71717a;
-  
-  --emerald-glow: rgba(16, 185, 129, 0.15);
-  --emerald-border: rgba(16, 185, 129, 0.3);
-  --crimson-glow: rgba(239, 68, 68, 0.15);
-  --crimson-border: rgba(239, 68, 68, 0.3);
-  
+  --text-main: #F8FAFC;
+  --text-muted: #94A3B8;
+  --text-subtle: #64748B;
+
+  --emerald-glow: rgba(5, 150, 105, 0.15);
+  --emerald-border: rgba(5, 150, 105, 0.3);
+  --crimson-glow: rgba(220, 38, 38, 0.15);
+  --crimson-border: rgba(220, 38, 38, 0.3);
+
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 body {
   background-color: var(--canvas);
   color: var(--text-main);
-  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  letter-spacing: -0.01em;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
 
+/* Tailwind v4 resets buttons to the default cursor */
+button:not(:disabled),
+[role='button'],
+select,
+label[for] {
+  cursor: pointer;
+}
+
+/* Visible keyboard focus everywhere (guards may use a keyboard or scanner wedge) */
+:focus-visible {
+  outline: 2px solid #34D399;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Tabular Monospace for plate numbers, telemetry, and timecodes */
 .font-mono-tabular {
-  font-family: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-feature-settings: 'tnum' on, 'zero' on;
 }
 
@@ -44,18 +74,17 @@ body {
 .card-carbon {
   background: var(--surface);
   border: 1px solid var(--border);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .card-carbon-elevated {
   background: var(--surface-elevated);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 24px -12px rgba(2, 6, 23, 0.7);
 }
 
 /* Tactile Physical Button Response */
 .btn-tactile {
-  transition: all 0.2s var(--ease-spring);
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s, transform 0.2s var(--ease-spring);
 }
 
 .btn-tactile:active {
@@ -112,4 +141,13 @@ body {
 
 .animate-fade-in {
   animation: fadeIn 0.28s var(--ease-spring) forwards;
+}
+
+/* Inputs under 16px make iOS Safari zoom the page on focus */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }

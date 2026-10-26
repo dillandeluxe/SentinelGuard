@@ -33,6 +33,7 @@ export interface VisitorPass {
 
 export interface VisitorLog {
   id: string;
+  passId?: string; // set when the visit came from a pass, so check-out can close it
   guestName: string;
   visitorType: VisitorType;
   unitNumber: string;

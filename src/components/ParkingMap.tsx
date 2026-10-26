@@ -18,6 +18,7 @@ import {
   Layers
 } from 'lucide-react';
 import { ParkingSpace } from '../lib/types';
+import { formatDuration } from '../lib/rules';
 
 export const ParkingMap: React.FC = () => {
   const { parkingSpaces, updateParkingSpaceStatus } = useSystem();
@@ -43,17 +44,17 @@ export const ParkingMap: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="card-carbon p-4 flex items-center justify-between">
           <div>
-            <span className="text-zinc-500 text-xs font-mono block">TOTAL CAPACITY</span>
+            <span className="text-slate-500 text-xs font-mono block">TOTAL CAPACITY</span>
             <span className="text-2xl font-bold text-white font-mono">{totalBays} Bays</span>
           </div>
-          <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-white/10 flex items-center justify-center text-zinc-300">
+          <div className="w-10 h-10 rounded-lg bg-slate-900 border border-white/10 flex items-center justify-center text-slate-300">
             <ParkingSquare className="w-5 h-5" />
           </div>
         </div>
 
         <div className="card-carbon p-4 flex items-center justify-between">
           <div>
-            <span className="text-zinc-500 text-xs font-mono block">VACANT AVAILABLE</span>
+            <span className="text-slate-500 text-xs font-mono block">VACANT AVAILABLE</span>
             <span className="text-2xl font-bold text-emerald-400 font-mono">{availableBays} Open</span>
           </div>
           <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
@@ -63,7 +64,7 @@ export const ParkingMap: React.FC = () => {
 
         <div className="card-carbon p-4 flex items-center justify-between">
           <div>
-            <span className="text-zinc-500 text-xs font-mono block">VISITOR OCCUPIED</span>
+            <span className="text-slate-500 text-xs font-mono block">VISITOR OCCUPIED</span>
             <span className="text-2xl font-bold text-amber-400 font-mono">{visitorBaysOccupied} Stalls</span>
           </div>
           <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
@@ -73,7 +74,7 @@ export const ParkingMap: React.FC = () => {
 
         <div className="card-carbon p-4 flex items-center justify-between">
           <div>
-            <span className="text-zinc-500 text-xs font-mono block">OVERSTAY VIOLATIONS</span>
+            <span className="text-slate-500 text-xs font-mono block">OVERSTAY VIOLATIONS</span>
             <span className="text-2xl font-bold text-rose-400 font-mono">{overstayWarnings} Stalls</span>
           </div>
           <div className="w-10 h-10 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
@@ -91,20 +92,20 @@ export const ParkingMap: React.FC = () => {
             </div>
             <div>
               <h3 className="text-base font-bold text-white tracking-tight">Real-Time Bay Allocation Grid</h3>
-              <p className="text-xs text-zinc-400">Click any stall to view occupant telemetry or force release slot</p>
+              <p className="text-xs text-slate-400">Click any stall to view occupant telemetry or force release slot</p>
             </div>
           </div>
 
           {/* Zone Filter Segmented Control */}
-          <div className="flex items-center gap-1 bg-zinc-950 p-1 rounded-lg border border-white/10">
+          <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-white/10">
             {zones.map((zone) => (
               <button
                 key={zone}
                 onClick={() => setSelectedZone(zone)}
                 className={`btn-tactile px-3 py-1.5 rounded text-xs font-mono transition ${
                   selectedZone === zone
-                    ? 'bg-zinc-800 text-white font-bold border border-white/10 shadow-sm'
-                    : 'text-zinc-400 hover:text-zinc-200'
+                    ? 'bg-slate-800 text-white font-bold border border-white/10 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 {zone}
@@ -114,23 +115,23 @@ export const ParkingMap: React.FC = () => {
         </div>
 
         {/* Legend */}
-        <div className="flex flex-wrap items-center gap-4 text-xs bg-zinc-950/60 p-3 rounded-lg border border-white/5 font-mono">
-          <span className="text-zinc-500 font-semibold uppercase text-[10px]">Telemetry Status:</span>
+        <div className="flex flex-wrap items-center gap-4 text-xs bg-slate-950/60 p-3 rounded-lg border border-white/5 font-mono">
+          <span className="text-slate-500 font-semibold uppercase text-xs">Telemetry Status:</span>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
-            <span className="text-zinc-300 text-[11px]">Available</span>
+            <span className="text-slate-300 text-xs">Available</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50" />
-            <span className="text-zinc-300 text-[11px]">Visitor Active</span>
+            <span className="text-slate-300 text-xs">Visitor Active</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-sky-500 shadow-sm shadow-sky-500/50" />
-            <span className="text-zinc-300 text-[11px]">Resident Assigned</span>
+            <span className="text-slate-300 text-xs">Resident Assigned</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse shadow-sm shadow-rose-500/50" />
-            <span className="text-rose-300 text-[11px]">Overstay (&gt;4h)</span>
+            <span className="text-rose-300 text-xs">Overstay (&gt;4h)</span>
           </div>
         </div>
 
@@ -142,8 +143,8 @@ export const ParkingMap: React.FC = () => {
             const isResident = space.status === 'Occupied_Resident';
             const isOverstay = space.status === 'Overstay_Warning';
 
-            let cardBg = 'bg-zinc-950/70 border-white/5 hover:border-white/20';
-            let statusColor = 'text-zinc-400';
+            let cardBg = 'bg-slate-950/70 border-white/5 hover:border-white/20';
+            let statusColor = 'text-slate-400';
 
             if (isAvailable) {
               cardBg = 'bg-emerald-950/15 border-emerald-500/25 hover:border-emerald-500/50';
@@ -181,7 +182,7 @@ export const ParkingMap: React.FC = () => {
                 </div>
 
                 <div className="text-xs space-y-1 font-mono">
-                  <div className={`text-[11px] font-semibold ${statusColor}`}>
+                  <div className={`text-xs font-semibold ${statusColor}`}>
                     {isAvailable ? 'VACANT' :
                      isVisitor ? 'VISITOR' :
                      isResident ? 'RESIDENT' :
@@ -190,20 +191,20 @@ export const ParkingMap: React.FC = () => {
                   </div>
 
                   {space.currentVehiclePlate && (
-                    <div className="text-[10px] text-zinc-100 font-bold bg-zinc-900/90 px-1.5 py-0.5 rounded border border-white/10 w-max truncate">
+                    <div className="text-xs text-slate-100 font-bold bg-slate-900/90 px-1.5 py-0.5 rounded border border-white/10 w-max truncate">
                       {space.currentVehiclePlate}
                     </div>
                   )}
 
                   {space.occupantName && (
-                    <div className="text-[10px] text-zinc-400 truncate font-sans">
+                    <div className="text-xs text-slate-400 truncate font-sans">
                       {space.occupantName}
                     </div>
                   )}
 
                   {space.assignedUnitNumber && (
-                    <div className="text-[10px] text-zinc-500">
-                      Unit: <span className="text-zinc-300">{space.assignedUnitNumber}</span>
+                    <div className="text-xs text-slate-500">
+                      Unit: <span className="text-slate-300">{space.assignedUnitNumber}</span>
                     </div>
                   )}
                 </div>
@@ -224,7 +225,8 @@ export const ParkingMap: React.FC = () => {
               </div>
               <button
                 onClick={() => setSelectedSpace(null)}
-                className="text-zinc-400 hover:text-white font-mono text-sm"
+                aria-label="Close"
+                className="w-11 h-11 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 font-mono text-sm"
               >
                 ✕
               </button>
@@ -232,45 +234,45 @@ export const ParkingMap: React.FC = () => {
 
             <div className="space-y-2.5 text-xs font-mono">
               <div className="flex justify-between py-1 border-b border-white/5">
-                <span className="text-zinc-500">ZONE</span>
+                <span className="text-slate-500">ZONE</span>
                 <span className="text-white font-medium">{selectedSpace.zone}</span>
               </div>
 
               <div className="flex justify-between py-1 border-b border-white/5">
-                <span className="text-zinc-500">BAY TYPE</span>
+                <span className="text-slate-500">BAY TYPE</span>
                 <span className="text-emerald-400 font-semibold">{selectedSpace.type}</span>
               </div>
 
               <div className="flex justify-between py-1 border-b border-white/5">
-                <span className="text-zinc-500">CURRENT STATUS</span>
+                <span className="text-slate-500">CURRENT STATUS</span>
                 <span className="font-bold text-emerald-400 uppercase">{selectedSpace.status}</span>
               </div>
 
               {selectedSpace.currentVehiclePlate && (
                 <div className="flex justify-between py-1 border-b border-white/5">
-                  <span className="text-zinc-500">VEHICLE PLATE</span>
+                  <span className="text-slate-500">VEHICLE PLATE</span>
                   <span className="text-amber-300 font-bold">{selectedSpace.currentVehiclePlate}</span>
                 </div>
               )}
 
               {selectedSpace.occupantName && (
                 <div className="flex justify-between py-1 border-b border-white/5 font-sans">
-                  <span className="text-zinc-500 font-mono">OCCUPANT</span>
-                  <span className="text-zinc-200 font-semibold">{selectedSpace.occupantName}</span>
+                  <span className="text-slate-500 font-mono">OCCUPANT</span>
+                  <span className="text-slate-200 font-semibold">{selectedSpace.occupantName}</span>
                 </div>
               )}
 
               {selectedSpace.assignedUnitNumber && (
                 <div className="flex justify-between py-1 border-b border-white/5">
-                  <span className="text-zinc-500">ASSIGNED UNIT</span>
-                  <span className="text-zinc-200 font-bold">{selectedSpace.assignedUnitNumber}</span>
+                  <span className="text-slate-500">ASSIGNED UNIT</span>
+                  <span className="text-slate-200 font-bold">{selectedSpace.assignedUnitNumber}</span>
                 </div>
               )}
 
               {selectedSpace.entryTime && (
                 <div className="flex justify-between py-1 border-b border-white/5">
-                  <span className="text-zinc-500">PARK DURATION</span>
-                  <span className="text-amber-400">{selectedSpace.entryTime}</span>
+                  <span className="text-slate-500">PARK DURATION</span>
+                  <span className="text-amber-400">{formatDuration(selectedSpace.entryTime)}</span>
                 </div>
               )}
             </div>
@@ -290,7 +292,7 @@ export const ParkingMap: React.FC = () => {
               ) : (
                 <button
                   onClick={() => setSelectedSpace(null)}
-                  className="btn-tactile w-full py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-semibold rounded-lg text-xs border border-white/10"
+                  className="btn-tactile w-full py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold rounded-lg text-xs border border-white/10"
                 >
                   Close Telemetry
                 </button>

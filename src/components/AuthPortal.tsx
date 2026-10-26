@@ -66,7 +66,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col justify-center items-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col justify-center items-center p-4 relative overflow-hidden">
       {/* Subtle Dot Matrix Background */}
       <div 
         className="absolute inset-0 opacity-20 pointer-events-none"
@@ -81,7 +81,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({
         <div className="flex items-center justify-between">
           <button
             onClick={onBackToLanding}
-            className="btn-tactile text-xs text-zinc-400 hover:text-white transition flex items-center gap-1.5 font-medium px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-white/5"
+            className="btn-tactile text-xs text-slate-400 hover:text-white transition flex items-center gap-1.5 font-medium px-2.5 py-1.5 rounded-lg bg-slate-900 border border-white/5"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Return to Console</span>
@@ -101,7 +101,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({
             <h2 className="text-xl font-bold text-white tracking-tight">
               {isSignUp ? 'Enroll New Personnel' : 'Authentication Terminal'}
             </h2>
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-slate-400">
               {isSignUp
                 ? 'Register security profile for gatehouse or tenant clearance'
                 : 'Select role credentials to authorize access'}
@@ -110,10 +110,10 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({
 
           {/* Role Segmented Switcher */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block text-center">
+            <label className="text-xs font-mono text-slate-500 uppercase tracking-wider block text-center">
               CLEARANCE LEVEL & PROFILE
             </label>
-            <div className="grid grid-cols-3 gap-1 bg-zinc-950 p-1 rounded-lg border border-white/10">
+            <div className="grid grid-cols-3 gap-1 bg-slate-950 p-1 rounded-lg border border-white/10">
               {(['Guard', 'Resident', 'Admin'] as const).map((role) => (
                 <button
                   key={role}
@@ -121,8 +121,8 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({
                   onClick={() => setSelectedRole(role)}
                   className={`btn-tactile py-2 rounded text-xs font-mono font-semibold transition ${
                     selectedRole === role
-                      ? 'bg-zinc-800 text-emerald-400 border border-emerald-500/30 shadow-sm'
-                      : 'text-zinc-400 hover:text-zinc-200'
+                      ? 'bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
                   {role}
@@ -133,28 +133,28 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({
 
           {/* Quick Demo Pre-load Credentials */}
           <div className="text-center pt-0.5">
-            <span className="text-[10px] font-mono text-zinc-500 block mb-1">DEMO PRESETS:</span>
-            <div className="flex justify-center gap-3 text-[11px] font-mono">
+            <span className="text-xs font-mono text-slate-500 block mb-1">DEMO PRESETS:</span>
+            <div className="flex justify-center gap-3 text-xs font-mono">
               <button
                 type="button"
                 onClick={fillGuardPreset}
-                className="text-zinc-400 hover:text-emerald-400 underline decoration-zinc-700 underline-offset-2 transition-colors"
+                className="text-slate-400 hover:text-emerald-400 underline decoration-slate-700 underline-offset-2 transition-colors"
               >
                 Officer
               </button>
-              <span className="text-zinc-700">•</span>
+              <span className="text-slate-700">•</span>
               <button
                 type="button"
                 onClick={fillResidentPreset}
-                className="text-zinc-400 hover:text-emerald-400 underline decoration-zinc-700 underline-offset-2 transition-colors"
+                className="text-slate-400 hover:text-emerald-400 underline decoration-slate-700 underline-offset-2 transition-colors"
               >
                 Resident
               </button>
-              <span className="text-zinc-700">•</span>
+              <span className="text-slate-700">•</span>
               <button
                 type="button"
                 onClick={fillAdminPreset}
-                className="text-zinc-400 hover:text-emerald-400 underline decoration-zinc-700 underline-offset-2 transition-colors"
+                className="text-slate-400 hover:text-emerald-400 underline decoration-slate-700 underline-offset-2 transition-colors"
               >
                 Admin
               </button>
@@ -165,7 +165,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({
           <form onSubmit={handleSubmit} className="space-y-3.5">
             {isSignUp && (
               <div>
-                <label className="text-[11px] font-mono text-zinc-400 block mb-1">Full Name</label>
+                <label className="text-xs font-mono text-slate-400 block mb-1">Full Name</label>
                 <div className="relative">
                   <input
                     type="text"
@@ -173,15 +173,15 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({
                     placeholder="Enter identity name..."
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full bg-zinc-950 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-950 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                   />
-                  <User className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-2.5" />
+                  <User className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
                 </div>
               </div>
             )}
 
             <div>
-              <label className="text-[11px] font-mono text-zinc-400 block mb-1">Officer Email / ID</label>
+              <label className="text-xs font-mono text-slate-400 block mb-1">Officer Email / ID</label>
               <div className="relative">
                 <input
                   type="email"
@@ -189,14 +189,14 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({
                   placeholder="identity@sentinelguard.io"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-zinc-950 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 font-mono"
+                  className="w-full bg-slate-950 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono"
                 />
-                <Mail className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-2.5" />
+                <Mail className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
               </div>
             </div>
 
             <div>
-              <label className="text-[11px] font-mono text-zinc-400 block mb-1">Access Token / Password</label>
+              <label className="text-xs font-mono text-slate-400 block mb-1">Access Token / Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -204,13 +204,13 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({
                   placeholder="••••••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-zinc-950 border border-white/10 rounded-lg pl-9 pr-10 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 font-mono"
+                  className="w-full bg-slate-950 border border-white/10 rounded-lg pl-9 pr-10 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono"
                 />
-                <Lock className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-2.5" />
+                <Lock className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2 p-0.5 text-zinc-500 hover:text-zinc-200 transition"
+                  className="absolute right-3 top-2 p-0.5 text-slate-500 hover:text-slate-200 transition"
                 >
                   {showPassword ? (
                     <EyeOff className="w-3.5 h-3.5 text-emerald-400" />
@@ -222,7 +222,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({
             </div>
 
             <div>
-              <label className="text-[11px] font-mono text-zinc-400 block mb-1">
+              <label className="text-xs font-mono text-slate-400 block mb-1">
                 Post / Unit Assignment
               </label>
               <div className="relative">
@@ -231,15 +231,15 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({
                   placeholder="e.g. Gate 1 or Unit A-101"
                   value={unitOrGate}
                   onChange={(e) => setUnitOrGate(e.target.value)}
-                  className="w-full bg-zinc-950 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 font-mono"
+                  className="w-full bg-slate-950 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono"
                 />
-                <Building2 className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-2.5" />
+                <Building2 className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
               </div>
             </div>
 
             <button
               type="submit"
-              className="btn-tactile w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs rounded-lg transition shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 mt-3"
+              className="btn-tactile w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 mt-3"
             >
               <UserCheck className="w-4 h-4" />
               <span>{isSignUp ? 'Enroll Profile' : `Authenticate as ${selectedRole}`}</span>
@@ -247,7 +247,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({
           </form>
 
           {/* Toggle Sign Up / Sign In */}
-          <div className="text-center text-xs text-zinc-400 border-t border-white/5 pt-3">
+          <div className="text-center text-xs text-slate-400 border-t border-white/5 pt-3">
             {isSignUp ? 'Already registered?' : 'Need temporary clearance?'}{' '}
             <button
               type="button"

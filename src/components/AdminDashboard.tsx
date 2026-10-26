@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useSystem } from '../lib/store';
 import { ParkingBayType } from '../lib/types';
+import { toCsv } from '../lib/rules';
 import { 
   BarChart3, 
   Users, 
@@ -21,11 +22,22 @@ import {
 } from 'lucide-react';
 
 const inputClass =
-  'w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 font-mono';
-const labelClass = 'text-[11px] font-mono text-zinc-400 block mb-1';
+  'w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono';
+const labelClass = 'text-xs font-mono text-slate-400 block mb-1';
 
 export const AdminDashboard: React.FC = () => {
   const { units, visitorLogs, parkingSpaces, addRealUnit, addRealParkingSpace } = useSystem();
+
+  // shortcut: exports the visitor log only; switch to the append-only audit table once the backend exists.
+  const exportAuditCsv = () => {
+    const blob = new Blob([toCsv(visitorLogs.map(({ id, passId, ...log }) => log))], { type: 'text/csv' });
+    const a = Object.assign(document.createElement('a'), {
+      href: URL.createObjectURL(blob),
+      download: `sentinelguard-audit-${new Date().toISOString().slice(0, 10)}.csv`,
+    });
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
 
   const emptyUnit = { unitNumber: '', block: '', floor: '1', residentName: '', residentPhone: '', allocatedParkingBay: '', vehicles: '' };
   const [unitForm, setUnitForm] = useState(emptyUnit);
@@ -95,19 +107,19 @@ export const AdminDashboard: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-bold text-white tracking-tight">System Telemetry & Audit Operations</h3>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 border border-emerald-500/25 text-emerald-400">
+              <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-emerald-500/10 border border-emerald-500/25 text-emerald-400">
                 REAL-TIME
               </span>
             </div>
-            <p className="text-xs text-zinc-400 mt-0.5">
+            <p className="text-xs text-slate-400 mt-0.5">
               Live capacity utilization, barrier transaction auditing, and overstay violations
             </p>
           </div>
         </div>
 
         <button
-          onClick={() => alert('Generating Security Audit Log CSV...')}
-          className="btn-tactile px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-white/10 font-medium rounded-lg text-xs flex items-center gap-2"
+          onClick={exportAuditCsv}
+          className="btn-tactile px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-white/10 font-medium rounded-lg text-xs flex items-center gap-2"
         >
           <Download className="w-4 h-4 text-emerald-400" />
           <span>Export Audit Log (CSV)</span>
@@ -117,36 +129,36 @@ export const AdminDashboard: React.FC = () => {
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="card-carbon p-5 space-y-2">
-          <div className="flex items-center justify-between text-zinc-500 text-xs font-mono">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-mono">
             <span>RESIDENTIAL UNITS</span>
-            <Building2 className="w-4 h-4 text-zinc-400" />
+            <Building2 className="w-4 h-4 text-slate-400" />
           </div>
           <div className="text-3xl font-bold text-white font-mono">{totalUnits}</div>
-          <p className="text-[11px] text-emerald-400 flex items-center gap-1 font-mono">
+          <p className="text-xs text-emerald-400 flex items-center gap-1 font-mono">
             <TrendingUp className="w-3 h-3" />
             {expectingGuestsUnits} units expecting guests
           </p>
         </div>
 
         <div className="card-carbon p-5 space-y-2">
-          <div className="flex items-center justify-between text-zinc-500 text-xs font-mono">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-mono">
             <span>DAILY CLEARANCES</span>
-            <Users className="w-4 h-4 text-zinc-400" />
+            <Users className="w-4 h-4 text-slate-400" />
           </div>
           <div className="text-3xl font-bold text-white font-mono">{totalLogs}</div>
-          <p className="text-[11px] text-zinc-400 flex items-center gap-1 font-mono">
+          <p className="text-xs text-slate-400 flex items-center gap-1 font-mono">
             <Clock className="w-3 h-3 text-emerald-400" />
             {activeInside} vehicles on-site now
           </p>
         </div>
 
         <div className="card-carbon p-5 space-y-2">
-          <div className="flex items-center justify-between text-zinc-500 text-xs font-mono">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-mono">
             <span>PARKING OCCUPANCY</span>
             <ParkingSquare className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="text-3xl font-bold text-white font-mono">{parkingOccupancyRate}%</div>
-          <div className="w-full bg-zinc-950 h-1.5 rounded-full overflow-hidden border border-white/10">
+          <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden border border-white/10">
             <div 
               className="bg-emerald-400 h-full rounded-full transition-all duration-500" 
               style={{ width: `${parkingOccupancyRate}%` }} 
@@ -155,12 +167,12 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         <div className="card-carbon p-5 space-y-2">
-          <div className="flex items-center justify-between text-zinc-500 text-xs font-mono">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-mono">
             <span>OVERSTAY FLAGS</span>
             <ShieldAlert className="w-4 h-4 text-rose-400" />
           </div>
           <div className="text-3xl font-bold text-rose-400 font-mono">{overstayCount}</div>
-          <p className="text-[11px] text-zinc-400 font-mono">
+          <p className="text-xs text-slate-400 font-mono">
             {overstayCount > 0 ? 'Enforcement warning issued' : 'All stalls compliant'}
           </p>
         </div>
@@ -174,7 +186,7 @@ export const AdminDashboard: React.FC = () => {
               <PlusCircle className="w-4 h-4 text-emerald-400" />
               Register Unit & Resident
             </span>
-            <span className="text-[11px] font-mono text-zinc-500">{totalUnits} units</span>
+            <span className="text-xs font-mono text-slate-500">{totalUnits} units</span>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
@@ -210,8 +222,8 @@ export const AdminDashboard: React.FC = () => {
               <input id="unit-plates" placeholder="SJK-8821, ABC-1234" value={unitForm.vehicles} onChange={(e) => setUnitForm({ ...unitForm, vehicles: e.target.value })} className={`${inputClass} uppercase`} />
             </div>
           </div>
-          {unitError && <p role="alert" className="text-[11px] font-mono text-rose-400">{unitError}</p>}
-          <button type="submit" className="btn-tactile w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs rounded-lg transition">
+          {unitError && <p role="alert" className="text-xs font-mono text-rose-400">{unitError}</p>}
+          <button type="submit" className="btn-tactile w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition">
             Add Unit
           </button>
         </form>
@@ -222,7 +234,7 @@ export const AdminDashboard: React.FC = () => {
               <PlusCircle className="w-4 h-4 text-emerald-400" />
               Register Parking Bay
             </span>
-            <span className="text-[11px] font-mono text-zinc-500">{totalParking} bays</span>
+            <span className="text-xs font-mono text-slate-500">{totalParking} bays</span>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -243,8 +255,8 @@ export const AdminDashboard: React.FC = () => {
             <label htmlFor="bay-zone" className={labelClass}>Zone *</label>
             <input id="bay-zone" required placeholder="Basement 1" value={bayForm.zone} onChange={(e) => setBayForm({ ...bayForm, zone: e.target.value })} className={inputClass} />
           </div>
-          {bayError && <p role="alert" className="text-[11px] font-mono text-rose-400">{bayError}</p>}
-          <button type="submit" className="btn-tactile w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs rounded-lg transition">
+          {bayError && <p role="alert" className="text-xs font-mono text-rose-400">{bayError}</p>}
+          <button type="submit" className="btn-tactile w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition">
             Add Bay
           </button>
         </form>
@@ -256,37 +268,37 @@ export const AdminDashboard: React.FC = () => {
           <div className="card-carbon p-5 space-y-4">
             <div className="flex items-center justify-between border-b border-white/5 pb-3">
               <span className="text-xs font-semibold text-white">Visitor Distribution by Category</span>
-              <span className="text-[11px] font-mono text-zinc-500">TODAY</span>
+              <span className="text-xs font-mono text-slate-500">TODAY</span>
             </div>
 
             <div className="space-y-4 pt-1 font-mono">
               <div>
                 <div className="flex justify-between text-xs mb-1.5">
-                  <span className="text-zinc-300 font-sans">Social Guests</span>
-                  <span className="text-zinc-200">{guestsCount} visits</span>
+                  <span className="text-slate-300 font-sans">Social Guests</span>
+                  <span className="text-slate-200">{guestsCount} visits</span>
                 </div>
-                <div className="w-full bg-zinc-950 h-2 rounded-full overflow-hidden border border-white/10">
+                <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-white/10">
                   <div className="bg-emerald-400 h-full rounded-full" style={{ width: `${totalLogs ? (guestsCount / totalLogs) * 100 : 0}%` }} />
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-xs mb-1.5">
-                  <span className="text-zinc-300 font-sans">Delivery & Couriers</span>
+                  <span className="text-slate-300 font-sans">Delivery & Couriers</span>
                   <span className="text-amber-300">{deliveryCount} visits</span>
                 </div>
-                <div className="w-full bg-zinc-950 h-2 rounded-full overflow-hidden border border-white/10">
+                <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-white/10">
                   <div className="bg-amber-400 h-full rounded-full" style={{ width: `${totalLogs ? (deliveryCount / totalLogs) * 100 : 0}%` }} />
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-xs mb-1.5">
-                  <span className="text-zinc-300 font-sans">Contractors & Trades</span>
-                  <span className="text-zinc-300">{contractorCount} visits</span>
+                  <span className="text-slate-300 font-sans">Contractors & Trades</span>
+                  <span className="text-slate-300">{contractorCount} visits</span>
                 </div>
-                <div className="w-full bg-zinc-950 h-2 rounded-full overflow-hidden border border-white/10">
-                  <div className="bg-zinc-400 h-full rounded-full" style={{ width: `${totalLogs ? (contractorCount / totalLogs) * 100 : 0}%` }} />
+                <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-white/10">
+                  <div className="bg-slate-400 h-full rounded-full" style={{ width: `${totalLogs ? (contractorCount / totalLogs) * 100 : 0}%` }} />
                 </div>
               </div>
             </div>
@@ -298,18 +310,18 @@ export const AdminDashboard: React.FC = () => {
           <div className="card-carbon p-5 space-y-3">
             <div className="flex items-center justify-between border-b border-white/5 pb-2">
               <span className="text-xs font-semibold text-white">Officer Clearance Audit Trail</span>
-              <span className="text-[11px] font-mono text-zinc-500">LIVE FEED</span>
+              <span className="text-xs font-mono text-slate-500">LIVE FEED</span>
             </div>
 
             <div className="space-y-2 max-h-56 overflow-y-auto pr-1 text-xs font-mono">
               {visitorLogs.map((log) => (
-                <div key={log.id} className="p-2.5 bg-zinc-950/70 border border-white/5 rounded-lg space-y-1">
+                <div key={log.id} className="p-2.5 bg-slate-950/70 border border-white/5 rounded-lg space-y-1">
                   <div className="flex justify-between font-medium">
                     <span className="text-white font-sans">{log.guestName}</span>
-                    <span className="text-zinc-500 text-[11px]">{log.entryTime}</span>
+                    <span className="text-slate-500 text-xs">{log.entryTime}</span>
                   </div>
-                  <div className="flex justify-between text-zinc-400 text-[11px]">
-                    <span>Officer: <span className="text-zinc-200">{log.guardName}</span></span>
+                  <div className="flex justify-between text-slate-400 text-xs">
+                    <span>Officer: <span className="text-slate-200">{log.guardName}</span></span>
                     <span className="text-emerald-400">Unit {log.unitNumber}</span>
                   </div>
                 </div>
