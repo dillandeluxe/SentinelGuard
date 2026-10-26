@@ -2,7 +2,7 @@
 
 import React, { useCallback, useState } from 'react';
 import { useSystem } from '../lib/store';
-import { formatTime, unitEntryWarning } from '../lib/rules';
+import { formatTime, unitEntryWarning, passCodeProblem } from '../lib/rules';
 import { QrScanner } from './QrScanner';
 import { 
   ShieldCheck, 
@@ -76,6 +76,8 @@ export const GuardConsole: React.FC = () => {
     (u) => u.unitNumber.toLowerCase().includes(unitSearch.toLowerCase()) ||
            u.residentName.toLowerCase().includes(unitSearch.toLowerCase())
   );
+
+  const scanProblem = matchedPass ? null : passCodeProblem(scanInput, visitorPasses);
 
   const handleScanSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -191,12 +193,14 @@ export const GuardConsole: React.FC = () => {
 
             {/* QR / Passcode Search Input */}
             <form onSubmit={handleScanSubmit} className="space-y-2">
-              <label className="text-xs font-mono text-slate-400 uppercase tracking-wider block">
-                Optical Scanner / Numeric Pass Code Entry
+              <label htmlFor="pass-code" className="text-xs font-mono text-slate-400 uppercase tracking-wider block">
+                Pass code (scan or type)
               </label>
               <div className="relative flex items-center">
                 <input
+                  id="pass-code"
                   type="text"
+                  aria-describedby={scanProblem ? 'pass-code-problem' : undefined}
                   placeholder="Scan QR or type code (e.g. QR-7KD9-X2MF)..."
                   value={scanInput}
                   onChange={(e) => {
@@ -215,6 +219,12 @@ export const GuardConsole: React.FC = () => {
                   <span>Verify</span>
                 </button>
               </div>
+              {scanProblem && (
+                <p id="pass-code-problem" role="alert" className="flex items-start gap-2 text-xs text-rose-300">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" aria-hidden="true" />
+                  {scanProblem}
+                </p>
+              )}
               <button
                 type="button"
                 onClick={() => setScanning((v) => !v)}

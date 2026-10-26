@@ -74,3 +74,16 @@ export const newPassCode = () => {
   const c = Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) => CODE_CHARS[b % 32]).join('');
   return `QR-${c.slice(0, 4)}-${c.slice(4)}`;
 };
+
+// Why a typed/scanned code won't check anyone in (null = usable, or still being typed).
+// Only says "not found" once the code is complete, so the guard isn't nagged mid-typing.
+export const passCodeProblem = (code: string, passes: VisitorPass[], now = Date.now()) => {
+  const typed = code.trim().toUpperCase();
+  const pass = passes.find((p) => p.passCode.toUpperCase() === typed);
+  if (!pass) return /^QR-(\d{5}|[A-Z0-9]{4}-[A-Z0-9]{4})$/.test(typed) ? 'No pass with this code. Check it with the guest.' : null;
+  if (isPassUsable(pass, now)) return null;
+  if (pass.status === 'CheckedIn') return `Already used: ${pass.guestName} is checked in.`;
+  if (pass.status === 'Completed') return `Already used: ${pass.guestName} checked in and left.`;
+  if (pass.status === 'Expired' || now > Date.parse(pass.validUntil)) return 'This pass has expired. Ask the resident for a new one.';
+  return 'This pass is not valid yet.';
+};

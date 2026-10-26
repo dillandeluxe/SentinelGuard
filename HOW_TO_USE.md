@@ -37,7 +37,7 @@ Without this the app runs in **demo mode**: data stays in one browser and any pa
 3. Copy **Project URL** and **anon public key** (Project Settings → API) into a `.env.local` file, using `.env.example` as the template. Restart `npm run dev`.
 4. For the live site: add the same two values under GitHub → repo **Settings → Secrets and variables → Actions → Variables**, then push to `main`.
 5. Sign up in the app. Every new account is a **Resident** with no unit. Make the first admin by hand: Supabase → **Table Editor → profiles**, set your own `role` to `Admin`.
-6. After that, manage everyone else in the app: **Analytics & Setup → Users & Access**. Set guards to `Guard`, and link each resident to their unit. People see the change the next time they sign in.
+6. After that, manage everyone else in the app: **Admin → Users & Access**. Set guards to `Guard`, and link each resident to their unit. People see the change the next time they sign in.
 
 From then on the role comes from the account. Residents only see their own unit, and the guard tablet sees new passes instantly.
 
@@ -60,7 +60,7 @@ From then on the role comes from the account. Residents only see their own unit,
   - **Admin:** everything.
 
 ### First-time setup (do this first)
-The app starts empty. Log in as **Admin**, open **Analytics & Setup** and add data:
+The app starts empty. Log in as **Admin**, open the **Admin** tab and add data:
 - **Register Unit & Resident:** unit number, block, floor, resident name and phone, allocated bay, and vehicle plates (separated by commas). Plates listed here open the gate automatically through LPR.
 - **Register Parking Bay:** bay number, type (Visitor, Resident, EV or Handicap) and zone.
 - Each form has a list underneath. Use the **pencil** to edit a row (the form switches to *Edit*), and the **bin** to delete it (click twice to confirm). Deleting is refused while a unit still has a visitor inside or active passes, or while a bay is occupied or allocated to a unit.
@@ -92,7 +92,7 @@ Data is saved in this browser and survives refreshes and logouts. To wipe it, cl
 - The pass code and QR are shown. You can copy the link or press **Send via WhatsApp**.
 - The pass code is what the guard enters in the Guard Console.
 
-### 7. Analytics & Setup (admin)
+### 7. Admin (analytics & setup)
 - Counts: units, today's clearances, parking occupancy and overstay flags.
 - The forms for adding units and bays (see First-time setup).
 - Visitors broken down by category, plus an officer audit trail.

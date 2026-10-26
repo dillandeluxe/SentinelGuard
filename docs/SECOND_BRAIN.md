@@ -66,8 +66,8 @@ Update the checkboxes as work lands. Last reviewed: 2026-10-27.
 | QR scanning | ✅ Camera | `QrScanner.tsx` (`html5-qrcode`); needs HTTPS or localhost |
 | LPR camera | 🟡 Simulator | Typed plate, random confidence |
 | Gate hardware | 🟡 Simulated | `triggerGateOpen` is a timer |
-| Offline / PWA | ❌ | No service worker; manifest `start_url` and icon miss `/SentinelGuard` |
-| Tests | 🟡 Rules + DB | `npm test` (rules.ts); `supabase/tests/gate_ops_test.sql`; no end-to-end test yet |
+| Offline / PWA | 🟡 Installable manifest | Manifest, start page and icon resolve under `/SentinelGuard` (fixed 2026-10-27). No service worker or offline queue yet |
+| Tests | 🟡 Rules + DB + manual E2E | `npm test` (rules.ts); `supabase/tests/gate_ops_test.sql`; manual browser run of the core loop in demo mode passed 2026-10-27 (see change log). No automated end-to-end test yet |
 
 ---
 
@@ -106,6 +106,7 @@ Priority: **P0** breaks the core loop or security · **P1** needed to call it co
 - [x] **P1** No double-booking or made-up bays: `pickBay` uses the chosen bay only if free, else first free visitor bay for a car, none on foot *(2026-10-27)*
 - [x] **P1** Unit status (`DoNotDisturb`, `Vacant`, deleted unit) warns the guard on pass check-in and walk-in; warns, doesn't block *(2026-10-27)*
 - [ ] **P2** Blacklist: admin can flag a plate/name → LPR returns `Blacklisted` / `Deny_Entry` (types already exist)
+- [x] **P1** Guard sees why a code won't work: not found, already used (checked in / left), expired, not valid yet (`passCodeProblem` in `rules.ts`, shown in `GuardConsole.tsx`) *(2026-10-27)*
 - [ ] **P2** Search/filter history in the logbook (by date, unit, plate)
 
 ### Phase 2: Real system (needs the backend decision)
@@ -125,7 +126,8 @@ Priority: **P0** breaks the core loop or security · **P1** needed to call it co
 
 ### Phase 3: Gatehouse reality
 - [x] **P1** Camera QR scanning in Guard Console (`QrScanner.tsx`, `html5-qrcode`) *(2026-10-27; needs HTTPS or localhost)*
-- [ ] **P1** PWA install + offline: service worker, fix manifest paths for `/SentinelGuard`, queue check-ins in IndexedDB while offline and sync after
+- [x] **P1** Manifest paths fixed for `/SentinelGuard` (`layout.tsx`, `public/manifest.json`) *(2026-10-27)*
+- [ ] **P1** Offline: service worker, queue check-ins in IndexedDB while offline and sync after
 - [ ] **P2** LPR: send a camera snapshot to a plate API (e.g. Plate Recognizer) from a small edge script; write results to the `LprDetection` table
 - [ ] **P2** Gate relay: ESP32 / Raspberry Pi + relay that listens for an "open" command (MQTT or HTTPS) from the backend; manual override button stays
 - [ ] **P2** Notify resident when their guest arrives (push or SMS)
@@ -137,7 +139,7 @@ Priority: **P0** breaks the core loop or security · **P1** needed to call it co
 - [ ] **P1** Tests: unit tests for the rules (pass validity, overstay, LPR matching) + one end-to-end test of the core loop
 - [ ] **P2** 2FA for admins
 - [ ] **P2** Reports: peak hours, average visit length, overstays per week
-- [ ] **P2** Accessibility pass (contrast, focus states, large touch targets for gloved guards)
+- [ ] **P2** Accessibility pass. Done in the redesign: visible focus, 44px targets on main actions, 12px minimum text, reduced motion, labelled icon buttons. Still to do: measure contrast with a tool, screen-reader run
 - [ ] **P2** Remove unused `canvas-confetti`, or use it; sync `README.md` (claims Next 15, app is on Next 16)
 
 ---
@@ -173,3 +175,4 @@ Priority: **P0** breaks the core loop or security · **P1** needed to call it co
 - **2026-10-27**: Backend chosen (Supabase). Added schema + RLS, real login, live sync, camera QR scan, ISO log times, bay picking. Fixed the Readiness checklist, which wrongly showed offline mode as done.
 - **2026-10-27**: Admin can edit and delete units and bays (`unitDeleteBlocker`/`bayDeleteBlocker` in `rules.ts`); deletes sync both ways via Realtime. New RLS policy `admin deletes parking` in `schema.sql`. Guard Console warns on vacant / Do Not Disturb units.
 - **2026-10-27**: Users & Access panel; atomic gate operations (migration 002, self-test passed on the live project); unguessable pass codes; silent RLS failures surfaced. Migrations 002 and 003 are applied on the live project.
+- **2026-10-27**: Manual end-to-end test in demo mode (Chrome, localhost), all passed: admin adds/edits units and bays; bay delete refused while allocated; pass created for a Do Not Disturb unit → guard sees the DND warning → check-in assigns visitor bay, logs real guard name and ISO time, pass becomes CheckedIn; same code can't be reused; unit/bay deletes refused while the guest is inside; check-out frees the bay, closes the pass, then deletes succeed; Guard role sees only Guard/Parking/LPR; data survives reload. Live site loads with no console errors. Not tested: Supabase mode across two devices (needs test accounts). Fixes from the run: pass-code feedback (`passCodeProblem`), manifest 404 under `/SentinelGuard`, header nav overflow (tab renamed "Admin", fake "EDGE OS / STATION 01" badges removed).

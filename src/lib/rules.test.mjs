@@ -1,6 +1,6 @@
 // Run: node src/lib/rules.test.mjs (Node 22.6+ strips the TS types)
 import assert from 'node:assert/strict';
-import { isPassUsable, isPassExpired, isOverstay, formatDuration, toCsv, pickBay, formatTime, unitDeleteBlocker, bayDeleteBlocker, unitEntryWarning, newPassCode } from './rules.ts';
+import { isPassUsable, isPassExpired, isOverstay, formatDuration, toCsv, pickBay, formatTime, unitDeleteBlocker, bayDeleteBlocker, unitEntryWarning, newPassCode, passCodeProblem } from './rules.ts';
 
 const now = Date.parse('2026-10-27T12:00:00Z');
 const pass = { status: 'Active', validFrom: '2026-10-27T10:00:00Z', validUntil: '2026-10-27T14:00:00Z' };
@@ -58,5 +58,21 @@ assert.equal(unitEntryWarning({ unitNumber: 'A-1', status: 'Occupied' }), null);
 const codes = Array.from({ length: 2000 }, newPassCode);
 codes.forEach((c) => assert.match(c, /^QR-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/));
 assert.equal(new Set(codes).size, codes.length);
+
+const codePasses = [
+  { ...pass, passCode: 'QR-AAAA-BBBB', guestName: 'Ana' },
+  { ...pass, passCode: 'QR-CCCC-DDDD', guestName: 'Ben', status: 'CheckedIn' },
+  { ...pass, passCode: 'QR-EEEE-FFFF', guestName: 'Cy', status: 'Completed' },
+  { ...pass, passCode: 'QR-GGGG-HHHH', guestName: 'Di', status: 'Expired' },
+];
+assert.equal(passCodeProblem('qr-aaaa-bbbb', codePasses, now), null);
+assert.match(passCodeProblem('QR-CCCC-DDDD', codePasses, now), /checked in/);
+assert.match(passCodeProblem('QR-EEEE-FFFF', codePasses, now), /left/);
+assert.match(passCodeProblem('QR-GGGG-HHHH', codePasses, now), /expired/);
+assert.match(passCodeProblem('QR-AAAA-BBBB', codePasses, Date.parse('2026-10-27T15:00:00Z')), /expired/);
+assert.match(passCodeProblem('QR-AAAA-BBBB', codePasses, Date.parse('2026-10-27T09:00:00Z')), /not valid yet/);
+assert.match(passCodeProblem('QR-ZZZZ-ZZZZ', codePasses, now), /No pass/);
+assert.equal(passCodeProblem('QR-ZZ', codePasses, now), null); // still typing
+assert.equal(passCodeProblem('', codePasses, now), null);
 
 console.log('rules: all checks passed');

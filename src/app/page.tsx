@@ -33,7 +33,7 @@ const ALL_TABS = [
   { id: 'Parking', label: 'Parking Grid', Icon: ParkingSquare },
   { id: 'LPR', label: 'Optical LPR', Icon: Camera },
   { id: 'Resident', label: 'Resident Pass', Icon: QrCode },
-  { id: 'Admin', label: 'Analytics & Setup', Icon: BarChart3 },
+  { id: 'Admin', label: 'Admin', Icon: BarChart3 },
 ] as const;
 
 // Convenience only. With Supabase, the database (RLS) enforces roles; in demo mode anyone can pick any role.
@@ -106,18 +106,7 @@ export default function Home() {
               >
                 <ShieldCheck className="w-5 h-5" />
               </button>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-sm font-bold text-white tracking-tight">SentinelGuard</h1>
-                  <span className="text-xs font-mono px-1.5 py-0.2 rounded bg-slate-900 border border-white/10 text-emerald-400">
-                    EDGE OS v2.4
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-xs font-mono text-slate-500">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>STATION 01 • ACTIVE</span>
-                </div>
-              </div>
+              <h1 className="text-sm font-bold text-white tracking-tight">SentinelGuard</h1>
             </div>
 
             {/* Hardware Segmented Navigation Switcher */}
