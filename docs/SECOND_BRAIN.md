@@ -91,6 +91,12 @@ Because the site is a static export, a real backend has to live **somewhere else
 
 ## 4. Gap list and checklist
 
+### Next up (ranked, reviewed 2026-10-27)
+1. **Guest pass link** (P1, Phase 2). The share link points at a fake domain (`ResidentPortal.tsx`, `sentinelguard.app/pass/...`), so a guest can't open their pass on their own phone: the cross-device loop breaks at step 1. Plan: static page `/SentinelGuard/pass/?code=QR-XXXX-XXXX` (static export can't serve dynamic paths), QR drawn from the code, live details via a `security definer` RPC `get_pass(code)` that returns display fields only (migration `004_public_pass_lookup.sql`); demo mode shows the QR without live status. Point Copy Link / WhatsApp at it.
+2. **Audit table** (P1). Goal 3 ("who let whom in, when, on whose authority") isn't met for manual gate opens and setup changes.
+3. **Mask visitor phones in lists** (part of P1 Privacy). Small; removes an anti-goal.
+4. **Offline queue for the guard tablet** (P1). Largest item; needs a service worker and IndexedDB.
+
 Priority: **P0** breaks the core loop or security · **P1** needed to call it complete · **P2** polish/bonus.
 
 ### Phase 1: Make the single-device loop correct (no backend needed)
@@ -177,3 +183,4 @@ Priority: **P0** breaks the core loop or security · **P1** needed to call it co
 - **2026-10-27**: Users & Access panel; atomic gate operations (migration 002, self-test passed on the live project); unguessable pass codes; silent RLS failures surfaced. Migrations 002 and 003 are applied on the live project.
 - **2026-10-27**: Manual end-to-end test in demo mode (Chrome, localhost), all passed: admin adds/edits units and bays; bay delete refused while allocated; pass created for a Do Not Disturb unit → guard sees the DND warning → check-in assigns visitor bay, logs real guard name and ISO time, pass becomes CheckedIn; same code can't be reused; unit/bay deletes refused while the guest is inside; check-out frees the bay, closes the pass, then deletes succeed; Guard role sees only Guard/Parking/LPR; data survives reload. Live site loads with no console errors. Not tested: Supabase mode across two devices (needs test accounts). Fixes from the run: pass-code feedback (`passCodeProblem`), manifest 404 under `/SentinelGuard`, header nav overflow (tab renamed "Admin", fake "EDGE OS / STATION 01" badges removed).
 - **2026-10-27**: `HOW_TO_USE.md` rewritten as a walkthrough: real vs demo mode, first-time setup in order, one guest end to end (9 steps), screen reference, troubleshooting.
+- **2026-10-27**: Added "Next up" ranking to §4 after the test run; guest pass link is first.
