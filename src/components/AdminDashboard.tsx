@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react';
 import { useSystem } from '../lib/store';
-import { ParkingBayType } from '../lib/types';
+import { ParkingBayType, ParkingSpace, Unit, UnitStatus } from '../lib/types';
 import { toCsv, formatTime } from '../lib/rules';
+import { UsersPanel } from './UsersPanel';
 import { 
   BarChart3, 
   Users, 
@@ -18,7 +19,9 @@ import {
   Download,
   Activity,
   Layers,
-  PlusCircle
+  PlusCircle,
+  Pencil,
+  Trash2
 } from 'lucide-react';
 
 const inputClass =
@@ -26,7 +29,10 @@ const inputClass =
 const labelClass = 'text-xs font-mono text-slate-400 block mb-1';
 
 export const AdminDashboard: React.FC = () => {
-  const { units, visitorLogs, parkingSpaces, addRealUnit, addRealParkingSpace } = useSystem();
+  const {
+    units, visitorLogs, parkingSpaces, addRealUnit, addRealParkingSpace,
+    updateUnit, updateParkingSpace, deleteUnit, deleteParkingSpace,
+  } = useSystem();
 
   // shortcut: exports the visitor log only; switch to the append-only audit table once the backend exists.
   const exportAuditCsv = () => {
@@ -39,45 +45,105 @@ export const AdminDashboard: React.FC = () => {
     URL.revokeObjectURL(a.href);
   };
 
-  const emptyUnit = { unitNumber: '', block: '', floor: '1', residentName: '', residentPhone: '', allocatedParkingBay: '', vehicles: '' };
+  const emptyUnit = { unitNumber: '', block: '', floor: '1', residentName: '', residentPhone: '', allocatedParkingBay: '', vehicles: '', status: 'Occupied' as UnitStatus };
   const [unitForm, setUnitForm] = useState(emptyUnit);
   const [unitError, setUnitError] = useState('');
-  const emptyBay = { bayNumber: '', zone: '', type: 'Visitor' as ParkingBayType };
+  const [editingUnitId, setEditingUnitId] = useState<string | null>(null);
+  const emptyBay = { bayNumber: '', zone: '', type: 'Visitor' as ParkingBayType, maxHours: '' };
   const [bayForm, setBayForm] = useState(emptyBay);
   const [bayError, setBayError] = useState('');
+  const [editingBayId, setEditingBayId] = useState<string | null>(null);
+  // Delete needs a second click on the same row; one id at a time across both lists.
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  const handleAddUnit = (e: React.FormEvent) => {
+  const resetUnitForm = () => {
+    setUnitForm(emptyUnit);
+    setEditingUnitId(null);
+    setUnitError('');
+  };
+
+  const resetBayForm = () => {
+    setBayForm(emptyBay);
+    setEditingBayId(null);
+    setBayError('');
+  };
+
+  const handleSaveUnit = (e: React.FormEvent) => {
     e.preventDefault();
-    const unitNumber = unitForm.unitNumber.trim().toUpperCase();
-    if (units.some((u) => u.unitNumber.toUpperCase() === unitNumber)) {
-      setUnitError(`Unit ${unitNumber} already exists.`);
-      return;
-    }
     const residentName = unitForm.residentName.trim();
-    addRealUnit({
-      unitNumber,
+    const fields = {
       block: unitForm.block.trim(),
       floor: Number(unitForm.floor) || 0,
       residentName,
       residentPhone: unitForm.residentPhone.trim(),
-      status: residentName ? 'Occupied' : 'Vacant',
+      status: residentName ? unitForm.status : ('Vacant' as UnitStatus),
       allocatedParkingBay: unitForm.allocatedParkingBay.trim().toUpperCase() || undefined,
       registeredVehicles: unitForm.vehicles.split(',').map((v) => v.trim().toUpperCase()).filter(Boolean),
-    });
-    setUnitForm(emptyUnit);
-    setUnitError('');
+    };
+    if (editingUnitId) {
+      updateUnit(editingUnitId, fields);
+    } else {
+      const unitNumber = unitForm.unitNumber.trim().toUpperCase();
+      if (units.some((u) => u.unitNumber.toUpperCase() === unitNumber)) {
+        setUnitError(`Unit ${unitNumber} already exists.`);
+        return;
+      }
+      addRealUnit({ unitNumber, ...fields });
+    }
+    resetUnitForm();
   };
 
-  const handleAddBay = (e: React.FormEvent) => {
+  const handleSaveBay = (e: React.FormEvent) => {
     e.preventDefault();
-    const bayNumber = bayForm.bayNumber.trim().toUpperCase();
-    if (parkingSpaces.some((p) => p.bayNumber.toUpperCase() === bayNumber)) {
-      setBayError(`Bay ${bayNumber} already exists.`);
-      return;
+    const fields = { zone: bayForm.zone.trim(), type: bayForm.type, maxHoursAllowed: Number(bayForm.maxHours) || undefined };
+    if (editingBayId) {
+      updateParkingSpace(editingBayId, fields);
+    } else {
+      const bayNumber = bayForm.bayNumber.trim().toUpperCase();
+      if (parkingSpaces.some((p) => p.bayNumber.toUpperCase() === bayNumber)) {
+        setBayError(`Bay ${bayNumber} already exists.`);
+        return;
+      }
+      addRealParkingSpace({ bayNumber, ...fields, status: 'Available' });
     }
-    addRealParkingSpace({ bayNumber, zone: bayForm.zone.trim(), type: bayForm.type, status: 'Available' });
-    setBayForm(emptyBay);
+    resetBayForm();
+  };
+
+  const startEditUnit = (u: Unit) => {
+    setEditingUnitId(u.id);
+    setUnitError('');
+    setUnitForm({
+      unitNumber: u.unitNumber,
+      block: u.block,
+      floor: String(u.floor),
+      residentName: u.residentName,
+      residentPhone: u.residentPhone,
+      allocatedParkingBay: u.allocatedParkingBay ?? '',
+      vehicles: u.registeredVehicles.join(', '),
+      status: u.status,
+    });
+  };
+
+  const startEditBay = (b: ParkingSpace) => {
+    setEditingBayId(b.id);
     setBayError('');
+    setBayForm({ bayNumber: b.bayNumber, zone: b.zone, type: b.type, maxHours: b.maxHoursAllowed ? String(b.maxHoursAllowed) : '' });
+  };
+
+  const handleDeleteUnit = (u: Unit) => {
+    if (confirmDeleteId !== u.id) return setConfirmDeleteId(u.id);
+    setConfirmDeleteId(null);
+    const blocker = deleteUnit(u.id);
+    if (!blocker && editingUnitId === u.id) resetUnitForm();
+    setUnitError(blocker ? `Can't delete ${u.unitNumber}: ${blocker}` : '');
+  };
+
+  const handleDeleteBay = (b: ParkingSpace) => {
+    if (confirmDeleteId !== b.id) return setConfirmDeleteId(b.id);
+    setConfirmDeleteId(null);
+    const blocker = deleteParkingSpace(b.id);
+    if (!blocker && editingBayId === b.id) resetBayForm();
+    setBayError(blocker ? `Can't delete ${b.bayNumber}: ${blocker}` : '');
   };
 
   const totalUnits = units.length;
@@ -180,18 +246,19 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Property Setup: register units and parking bays */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <form onSubmit={handleAddUnit} className="card-carbon p-5 space-y-3">
+        <div className="space-y-4">
+        <form onSubmit={handleSaveUnit} className="card-carbon p-5 space-y-3">
           <div className="flex items-center justify-between border-b border-white/5 pb-3">
             <span className="text-xs font-semibold text-white flex items-center gap-2">
               <PlusCircle className="w-4 h-4 text-emerald-400" />
-              Register Unit & Resident
+              {editingUnitId ? `Edit Unit ${unitForm.unitNumber}` : 'Register Unit & Resident'}
             </span>
             <span className="text-xs font-mono text-slate-500">{totalUnits} units</span>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label htmlFor="unit-number" className={labelClass}>Unit No. *</label>
-              <input id="unit-number" required placeholder="A-101" value={unitForm.unitNumber} onChange={(e) => setUnitForm({ ...unitForm, unitNumber: e.target.value })} className={`${inputClass} uppercase`} />
+              <input id="unit-number" required disabled={!!editingUnitId} placeholder="A-101" value={unitForm.unitNumber} onChange={(e) => setUnitForm({ ...unitForm, unitNumber: e.target.value })} className={`${inputClass} uppercase disabled:opacity-50`} />
             </div>
             <div>
               <label htmlFor="unit-block" className={labelClass}>Block *</label>
@@ -218,28 +285,73 @@ export const AdminDashboard: React.FC = () => {
               <input id="unit-bay" placeholder="R-101" value={unitForm.allocatedParkingBay} onChange={(e) => setUnitForm({ ...unitForm, allocatedParkingBay: e.target.value })} className={`${inputClass} uppercase`} />
             </div>
             <div>
-              <label htmlFor="unit-plates" className={labelClass}>Vehicle Plates (comma-separated)</label>
-              <input id="unit-plates" placeholder="SJK-8821, ABC-1234" value={unitForm.vehicles} onChange={(e) => setUnitForm({ ...unitForm, vehicles: e.target.value })} className={`${inputClass} uppercase`} />
+              <label htmlFor="unit-status" className={labelClass}>Status</label>
+              <select id="unit-status" value={unitForm.status} onChange={(e) => setUnitForm({ ...unitForm, status: e.target.value as UnitStatus })} className={inputClass}>
+                <option value="Occupied">Occupied</option>
+                <option value="ExpectingGuest">Expecting guest</option>
+                <option value="DoNotDisturb">Do not disturb</option>
+                <option value="Vacant">Vacant</option>
+              </select>
             </div>
           </div>
+          <div>
+            <label htmlFor="unit-plates" className={labelClass}>Vehicle Plates (comma-separated)</label>
+            <input id="unit-plates" placeholder="SJK-8821, ABC-1234" value={unitForm.vehicles} onChange={(e) => setUnitForm({ ...unitForm, vehicles: e.target.value })} className={`${inputClass} uppercase`} />
+          </div>
           {unitError && <p role="alert" className="text-xs font-mono text-rose-400">{unitError}</p>}
-          <button type="submit" className="btn-tactile w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition">
-            Add Unit
-          </button>
+          <div className="flex gap-2">
+            <button type="submit" className="btn-tactile flex-1 min-h-11 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition">
+              {editingUnitId ? 'Save Changes' : 'Add Unit'}
+            </button>
+            {editingUnitId && (
+              <button type="button" onClick={resetUnitForm} className="btn-tactile min-h-11 px-4 bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-200 text-xs font-semibold rounded-lg">
+                Cancel
+              </button>
+            )}
+          </div>
         </form>
 
-        <form onSubmit={handleAddBay} className="card-carbon p-5 space-y-3">
+        <ul className="card-carbon divide-y divide-white/5 max-h-80 overflow-y-auto" aria-label="Registered units">
+          {units.length === 0 && <li className="p-4 text-xs text-slate-500 text-center">No units yet.</li>}
+          {units.map((u) => (
+            <li key={u.id} className={`flex items-center gap-3 px-4 py-2 ${editingUnitId === u.id ? 'bg-emerald-500/5' : ''}`}>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-mono font-semibold text-white">{u.unitNumber}</p>
+                <p className="text-xs text-slate-400 truncate">{u.residentName || 'No resident'} · {u.status}</p>
+              </div>
+              <button type="button" onClick={() => startEditUnit(u)} aria-label={`Edit unit ${u.unitNumber}`} className="btn-tactile w-11 h-11 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+                <Pencil className="w-4 h-4" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDeleteUnit(u)}
+                onBlur={() => setConfirmDeleteId((id) => (id === u.id ? null : id))}
+                aria-label={confirmDeleteId === u.id ? `Confirm delete unit ${u.unitNumber}` : `Delete unit ${u.unitNumber}`}
+                className={`btn-tactile min-h-11 min-w-11 px-3 flex items-center justify-center gap-1.5 rounded-lg text-xs font-semibold ${
+                  confirmDeleteId === u.id ? 'bg-rose-500 text-white' : 'text-slate-400 hover:text-rose-300 hover:bg-rose-500/10'
+                }`}
+              >
+                <Trash2 className="w-4 h-4" aria-hidden="true" />
+                {confirmDeleteId === u.id && 'Confirm'}
+              </button>
+            </li>
+          ))}
+        </ul>
+        </div>
+
+        <div className="space-y-4">
+        <form onSubmit={handleSaveBay} className="card-carbon p-5 space-y-3">
           <div className="flex items-center justify-between border-b border-white/5 pb-3">
             <span className="text-xs font-semibold text-white flex items-center gap-2">
               <PlusCircle className="w-4 h-4 text-emerald-400" />
-              Register Parking Bay
+              {editingBayId ? `Edit Bay ${bayForm.bayNumber}` : 'Register Parking Bay'}
             </span>
             <span className="text-xs font-mono text-slate-500">{totalParking} bays</span>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label htmlFor="bay-number" className={labelClass}>Bay No. *</label>
-              <input id="bay-number" required placeholder="V-01" value={bayForm.bayNumber} onChange={(e) => setBayForm({ ...bayForm, bayNumber: e.target.value })} className={`${inputClass} uppercase`} />
+              <input id="bay-number" required disabled={!!editingBayId} placeholder="V-01" value={bayForm.bayNumber} onChange={(e) => setBayForm({ ...bayForm, bayNumber: e.target.value })} className={`${inputClass} uppercase disabled:opacity-50`} />
             </div>
             <div>
               <label htmlFor="bay-type" className={labelClass}>Type</label>
@@ -251,16 +363,59 @@ export const AdminDashboard: React.FC = () => {
               </select>
             </div>
           </div>
-          <div>
-            <label htmlFor="bay-zone" className={labelClass}>Zone *</label>
-            <input id="bay-zone" required placeholder="Basement 1" value={bayForm.zone} onChange={(e) => setBayForm({ ...bayForm, zone: e.target.value })} className={inputClass} />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label htmlFor="bay-zone" className={labelClass}>Zone *</label>
+              <input id="bay-zone" required placeholder="Basement 1" value={bayForm.zone} onChange={(e) => setBayForm({ ...bayForm, zone: e.target.value })} className={inputClass} />
+            </div>
+            <div>
+              <label htmlFor="bay-hours" className={labelClass}>Max hours (blank = 4)</label>
+              <input id="bay-hours" type="number" min="1" placeholder="4" value={bayForm.maxHours} onChange={(e) => setBayForm({ ...bayForm, maxHours: e.target.value })} className={inputClass} />
+            </div>
           </div>
           {bayError && <p role="alert" className="text-xs font-mono text-rose-400">{bayError}</p>}
-          <button type="submit" className="btn-tactile w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition">
-            Add Bay
-          </button>
+          <div className="flex gap-2">
+            <button type="submit" className="btn-tactile flex-1 min-h-11 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition">
+              {editingBayId ? 'Save Changes' : 'Add Bay'}
+            </button>
+            {editingBayId && (
+              <button type="button" onClick={resetBayForm} className="btn-tactile min-h-11 px-4 bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-200 text-xs font-semibold rounded-lg">
+                Cancel
+              </button>
+            )}
+          </div>
         </form>
+
+        <ul className="card-carbon divide-y divide-white/5 max-h-80 overflow-y-auto" aria-label="Registered parking bays">
+          {parkingSpaces.length === 0 && <li className="p-4 text-xs text-slate-500 text-center">No bays yet.</li>}
+          {parkingSpaces.map((b) => (
+            <li key={b.id} className={`flex items-center gap-3 px-4 py-2 ${editingBayId === b.id ? 'bg-emerald-500/5' : ''}`}>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-mono font-semibold text-white">{b.bayNumber}</p>
+                <p className="text-xs text-slate-400 truncate">{b.zone} · {b.type.replace('_', ' ')} · {b.status.replace('_', ' ')}</p>
+              </div>
+              <button type="button" onClick={() => startEditBay(b)} aria-label={`Edit bay ${b.bayNumber}`} className="btn-tactile w-11 h-11 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+                <Pencil className="w-4 h-4" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDeleteBay(b)}
+                onBlur={() => setConfirmDeleteId((id) => (id === b.id ? null : id))}
+                aria-label={confirmDeleteId === b.id ? `Confirm delete bay ${b.bayNumber}` : `Delete bay ${b.bayNumber}`}
+                className={`btn-tactile min-h-11 min-w-11 px-3 flex items-center justify-center gap-1.5 rounded-lg text-xs font-semibold ${
+                  confirmDeleteId === b.id ? 'bg-rose-500 text-white' : 'text-slate-400 hover:text-rose-300 hover:bg-rose-500/10'
+                }`}
+              >
+                <Trash2 className="w-4 h-4" aria-hidden="true" />
+                {confirmDeleteId === b.id && 'Confirm'}
+              </button>
+            </li>
+          ))}
+        </ul>
+        </div>
       </div>
+
+      <UsersPanel />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Visitor Category Breakdown */}

@@ -58,16 +58,16 @@ Update the checkboxes as work lands. Last reviewed: 2026-10-27.
 
 | Area | State | Notes |
 |---|---|---|
-| UI for all 3 roles | ✅ Built | Guard Console, Parking Grid, LPR, Resident Pass, Admin |
-| Core loop logic | 🟡 In one browser only | `src/lib/store.tsx`, React context + localStorage |
-| Login | ❌ Fake | Any password, anyone picks any role (`AuthPortal.tsx`) |
-| Database | ❌ Not connected | `prisma/schema.prisma` exists but nothing uses it |
-| Hosting | ⚠️ Static GitHub Pages | `output: "export"` means **no server, no API routes, no Prisma at runtime** |
-| QR scanning | ❌ Text box only | `html5-qrcode` is installed but unused |
+| UI for all 3 roles | ✅ Built | Guard Console, Parking Grid, LPR, Resident Pass, Admin (setup, edit/delete, Users & Access) |
+| Core loop logic | ✅ Cross-device | Supabase tables + Realtime; check-in/walk-in/check-out are single DB transactions. Demo mode (no keys) falls back to localStorage |
+| Login | ✅ Real (Supabase mode) | Email/password; role and unit come from `profiles`, set by an admin. Open sign-up still on |
+| Database | ✅ Supabase Postgres | `supabase/schema.sql` + `supabase/migrations/` (002, 003 applied on the live project); RLS per role |
+| Hosting | ✅ GitHub Pages | Static export; all server logic lives in Supabase |
+| QR scanning | ✅ Camera | `QrScanner.tsx` (`html5-qrcode`); needs HTTPS or localhost |
 | LPR camera | 🟡 Simulator | Typed plate, random confidence |
 | Gate hardware | 🟡 Simulated | `triggerGateOpen` is a timer |
 | Offline / PWA | ❌ | No service worker; manifest `start_url` and icon miss `/SentinelGuard` |
-| Tests | ❌ None | No test runner configured |
+| Tests | 🟡 Rules + DB | `npm test` (rules.ts); `supabase/tests/gate_ops_test.sql`; no end-to-end test yet |
 
 ---
 
@@ -101,10 +101,10 @@ Priority: **P0** breaks the core loop or security · **P1** needed to call it co
 - [x] **P1** Export Audit Log produces a real CSV download *(2026-10-27)*
 - [x] **P1** Resident "My Parking": Resident Pass tab shows the unit's own bay and every bay its guests occupy, with plate and time parked *(2026-10-27)*
 - [x] **P1** Visitor log times stored as ISO, shown with date *(2026-10-27)*
-- [ ] **P1** Edit / delete units and bays (admin) — today they can only be added
+- [x] **P1** Edit / delete units and bays (admin); delete is refused while a unit has visitors inside or live passes, or a bay is in use or allocated *(2026-10-27)*
 - [x] **P1** Resident is tied to their own unit: `profiles.unitNumber` + RLS, so they only see/issue for that unit *(Supabase mode, 2026-10-27)*
 - [x] **P1** No double-booking or made-up bays: `pickBay` uses the chosen bay only if free, else first free visitor bay for a car, none on foot *(2026-10-27)*
-- [ ] **P1** Unit status (`DoNotDisturb`, `Vacant`) actually blocks or warns on check-in
+- [x] **P1** Unit status (`DoNotDisturb`, `Vacant`, deleted unit) warns the guard on pass check-in and walk-in; warns, doesn't block *(2026-10-27)*
 - [ ] **P2** Blacklist: admin can flag a plate/name → LPR returns `Blacklisted` / `Deny_Entry` (types already exist)
 - [ ] **P2** Search/filter history in the logbook (by date, unit, plate)
 
@@ -115,11 +115,13 @@ Priority: **P0** breaks the core loop or security · **P1** needed to call it co
 - [ ] **P1** CSV export is still built from what the browser has loaded; move to a server-side export for admins only
 - [x] **P0** Live sync via Supabase Realtime *(2026-10-27; needs a two-device test once keys are set)*
 - [ ] **P1** Concurrent edits are last-write-wins per row; fine for one gate, revisit with several guard tablets
-- [ ] **P1** Check-in is several separate writes (pass, log, bay); move to one database function so a dropped connection can't leave half a check-in
-- [ ] **P1** Pass codes are unguessable (random 128-bit token in the QR, short code only for typing) and single-use
+- [x] **P1** Check-in, walk-in and check-out are single database transactions (`check_in`/`walk_in`/`check_out` in `supabase/migrations/002`), bay picked with row locks so two guards can't double-book; gate opens only after the server accepts *(2026-10-27; self-test: `supabase/tests/gate_ops_test.sql`)*
+- [x] **P1** Writes blocked by RLS (0 rows) now show the red error banner instead of failing silently *(2026-10-27)*
+- [x] **P1** Pass codes are unguessable (`QR-XXXX-XXXX`, ~10^12 combinations, `newPassCode`) and single-use (`check_in` refuses non-Active passes) *(2026-10-27)*
 - [ ] **P1** Shareable pass link (`/pass/<token>`) that shows the QR to the guest; today it points at a fake domain
 - [ ] **P1** Audit table: every gate open, check-in, override and setup change writes an immutable row (who, what, when, why)
-- [ ] **P1** Admin invites guards/residents instead of open sign-up
+- [x] **P1** Admin manages roles and resident units in-app (**Users & Access**, `UsersPanel.tsx`); admins can't demote themselves *(2026-10-27)*
+- [ ] **P2** Admin invites people instead of open sign-up
 
 ### Phase 3: Gatehouse reality
 - [x] **P1** Camera QR scanning in Guard Console (`QrScanner.tsx`, `html5-qrcode`) *(2026-10-27; needs HTTPS or localhost)*
@@ -169,3 +171,5 @@ Priority: **P0** breaks the core loop or security · **P1** needed to call it co
 ## 7. Change log
 - **2026-10-27**: Created. Phase 1 items done: pass expiry, pass completion on check-out, automatic overstay, real guard name (`store.tsx`), CSV export (`AdminDashboard.tsx`), resident My Parking card (`ResidentPortal.tsx`). Rules are in `src/lib/rules.ts` and checked by `npm test`.
 - **2026-10-27**: Backend chosen (Supabase). Added schema + RLS, real login, live sync, camera QR scan, ISO log times, bay picking. Fixed the Readiness checklist, which wrongly showed offline mode as done.
+- **2026-10-27**: Admin can edit and delete units and bays (`unitDeleteBlocker`/`bayDeleteBlocker` in `rules.ts`); deletes sync both ways via Realtime. New RLS policy `admin deletes parking` in `schema.sql`. Guard Console warns on vacant / Do Not Disturb units.
+- **2026-10-27**: Users & Access panel; atomic gate operations (migration 002, self-test passed on the live project); unguessable pass codes; silent RLS failures surfaced. Migrations 002 and 003 are applied on the live project.

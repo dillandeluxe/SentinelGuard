@@ -1,4 +1,4 @@
--- SentinelGuard database. Run once in Supabase → SQL Editor.
+-- SentinelGuard database. Fresh install: run this once in Supabase → SQL Editor, then each file in supabase/migrations/ in order.
 -- Column names are quoted camelCase so rows map 1:1 to src/lib/types.ts (same as Prisma's default naming).
 -- Roles are enforced here with Row-Level Security, not in the UI.
 
@@ -142,6 +142,7 @@ create policy "read parking" on public.parking_spaces for select
   );
 create policy "staff update parking" on public.parking_spaces for update using (my_role() in ('Guard', 'Admin'));
 create policy "admin creates parking" on public.parking_spaces for insert with check (my_role() = 'Admin');
+create policy "admin deletes parking" on public.parking_spaces for delete using (my_role() = 'Admin');
 
 -- ── Live sync to every open device ────────────────────────────────────────
 alter publication supabase_realtime add table

@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { supabase } from './supabase';
 import { Unit, VisitorPass, VisitorLog, ParkingSpace, LPRDetection } from './types';
-import { isPassUsable, isPassExpired, isOverstay, pickBay } from './rules';
+import { isPassUsable, isPassExpired, isOverstay, pickBay, unitDeleteBlocker, bayDeleteBlocker, newPassCode } from './rules';
 import { initialUnits, initialVisitorPasses, initialVisitorLogs, initialParkingSpaces, initialLPRDetections } from './mockData';
 
 interface SystemContextType {
@@ -18,6 +18,12 @@ interface SystemContextType {
   // Actions
   addRealUnit: (unit: Omit<Unit, 'id'>) => void;
   addRealParkingSpace: (space: Omit<ParkingSpace, 'id'>) => void;
+  // unitNumber/bayNumber are identities other records point at, so they can't be edited.
+  updateUnit: (id: string, patch: Partial<Omit<Unit, 'id' | 'unitNumber'>>) => void;
+  updateParkingSpace: (id: string, patch: Partial<Pick<ParkingSpace, 'zone' | 'type' | 'maxHoursAllowed'>>) => void;
+  // Return why the delete was refused, or null when it went through.
+  deleteUnit: (id: string) => string | null;
+  deleteParkingSpace: (id: string) => string | null;
   checkInVisitor: (passId: string, parkingBayId?: string) => void;
   quickManualCheckIn: (data: {
     guestName: string;
@@ -61,7 +67,7 @@ const TABLES: Record<Key, [table: string, orderBy: string, ascending: boolean]> 
 const toDb = (row: object) => Object.fromEntries(Object.entries(row).map(([k, v]) => [k, v ?? null]));
 
 // Mounted only after login (client-side), so reading storage in initial state can't cause a hydration mismatch.
-export const SystemProvider: React.FC<{ children: React.ReactNode; guardName?: string }> = ({ children, guardName = 'Unknown Officer' }) => {
+export const SystemProvider: React.FC<{ children: React.ReactNode; guardName?: string; role?: string }> = ({ children, guardName = 'Unknown Officer', role }) => {
   const [saved] = useState(() => (supabase ? {} : loadSaved()));
   const [units, setUnits] = useState<Unit[]>(saved.units ?? initialUnits);
   const [visitorPasses, setVisitorPasses] = useState<VisitorPass[]>(saved.visitorPasses ?? initialVisitorPasses);
@@ -73,6 +79,7 @@ export const SystemProvider: React.FC<{ children: React.ReactNode; guardName?: s
   const state: Record<Key, Row[]> = { units, visitorPasses, visitorLogs, parkingSpaces, lprDetections };
   const lastSynced = useRef(state);
   const fromServer = useRef(new WeakSet<object>());
+  const deletedOnServer = useRef(new Set<string>());
 
   // Supabase: load everything this user may see (RLS decides), then merge live changes from other devices.
   useEffect(() => {
@@ -101,7 +108,12 @@ export const SystemProvider: React.FC<{ children: React.ReactNode; guardName?: s
       .channel('sentinelguard')
       .on('postgres_changes', { event: '*', schema: 'public' }, (change) => {
         const key = (Object.keys(TABLES) as Key[]).find((k) => TABLES[k][0] === change.table);
-        if (key && 'id' in change.new) merge(key, [change.new as Row]);
+        if (!key) return;
+        if (change.eventType === 'DELETE' && 'id' in change.old) {
+          const id = change.old.id as string;
+          deletedOnServer.current.add(id);
+          setters[key]((prev) => prev.filter((row) => row.id !== id));
+        } else if ('id' in change.new) merge(key, [change.new as Row]);
       })
       .subscribe();
     return () => {
@@ -122,8 +134,20 @@ export const SystemProvider: React.FC<{ children: React.ReactNode; guardName?: s
         if (prevRows.has(row) || fromServer.current.has(row)) return;
         const table = db.from(TABLES[key][0]);
         // Separate insert/update (not upsert): upsert also needs insert rights, which guards don't have on parking.
-        const { error } = prevIds.has(row.id) ? await table.update(toDb(row)).eq('id', row.id) : await table.insert(toDb(row));
-        if (error) setSyncError(`Not saved to server (${TABLES[key][0]}): ${error.message}`);
+        // .select() so a write RLS silently filtered out (0 rows) is reported instead of looking saved.
+        const { data, error } = prevIds.has(row.id)
+          ? await table.update(toDb(row)).eq('id', row.id).select('id')
+          : await table.insert(toDb(row)).select('id');
+        if (error || !data?.length) {
+          setSyncError(`Not saved to server (${TABLES[key][0]}): ${error?.message ?? 'not permitted for your account'}`);
+        }
+      });
+      // Rows gone from state were deleted here, unless the server told us they were deleted elsewhere.
+      const ids = new Set(state[key].map((row) => row.id));
+      prev.forEach(async (row) => {
+        if (ids.has(row.id) || deletedOnServer.current.delete(row.id)) return;
+        const { error } = await db.from(TABLES[key][0]).delete().eq('id', row.id);
+        if (error) setSyncError(`Not deleted on server (${TABLES[key][0]}): ${error.message}`);
       });
     });
     lastSynced.current = state;
@@ -141,18 +165,24 @@ export const SystemProvider: React.FC<{ children: React.ReactNode; guardName?: s
 
   // Expire stale passes and flag overstays once a minute; both rules live in ./rules.
   useEffect(() => {
+    // Residents may not write these rows, so on their devices the change is shown locally and not synced.
+    const local = <T extends object>(row: T) => {
+      if (role === 'Resident') fromServer.current.add(row);
+      return row;
+    };
     const tick = () => {
       const now = Date.now();
       setVisitorPasses((prev) =>
-        prev.some((p) => isPassExpired(p, now)) ? prev.map((p) => (isPassExpired(p, now) ? { ...p, status: 'Expired' } : p)) : prev
+        prev.some((p) => isPassExpired(p, now)) ? prev.map((p) => (isPassExpired(p, now) ? local({ ...p, status: 'Expired' as const }) : p)) : prev
       );
       setParkingSpaces((prev) =>
-        prev.some((s) => isOverstay(s, now)) ? prev.map((s) => (isOverstay(s, now) ? { ...s, status: 'Overstay_Warning' } : s)) : prev
+        prev.some((s) => isOverstay(s, now)) ? prev.map((s) => (isOverstay(s, now) ? local({ ...s, status: 'Overstay_Warning' as const }) : s)) : prev
       );
     };
     tick();
     const id = setInterval(tick, 60_000);
     return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- role is fixed for the provider's lifetime (remounts on login)
   }, []);
 
   const [gateStatus, setGateStatus] = useState<'Closed' | 'Opening' | 'Open' | 'Hold'>('Closed');
@@ -174,6 +204,28 @@ export const SystemProvider: React.FC<{ children: React.ReactNode; guardName?: s
     setParkingSpaces((prev) => [...prev, newSpace]);
   };
 
+  const updateUnit: SystemContextType['updateUnit'] = (id, patch) =>
+    setUnits((prev) => prev.map((u) => (u.id === id ? { ...u, ...patch } : u)));
+
+  const updateParkingSpace: SystemContextType['updateParkingSpace'] = (id, patch) =>
+    setParkingSpaces((prev) => prev.map((ps) => (ps.id === id ? { ...ps, ...patch } : ps)));
+
+  const deleteUnit = (id: string) => {
+    const unit = units.find((u) => u.id === id);
+    if (!unit) return null;
+    const blocker = unitDeleteBlocker(unit.unitNumber, visitorPasses, visitorLogs);
+    if (!blocker) setUnits((prev) => prev.filter((u) => u.id !== id));
+    return blocker;
+  };
+
+  const deleteParkingSpace = (id: string) => {
+    const bay = parkingSpaces.find((ps) => ps.id === id);
+    if (!bay) return null;
+    const blocker = bayDeleteBlocker(bay, units);
+    if (!blocker) setParkingSpaces((prev) => prev.filter((ps) => ps.id !== id));
+    return blocker;
+  };
+
   const triggerGateOpen = (reason: string) => {
     setGateStatus('Opening');
     setActiveGateMessage(`Gate barrier triggered: ${reason}`);
@@ -186,9 +238,23 @@ export const SystemProvider: React.FC<{ children: React.ReactNode; guardName?: s
     }, 5500);
   };
 
+  // Supabase: each gate operation is one database transaction (supabase/migrations/002); Realtime brings the result back.
+  // The gate only opens once the server has accepted it.
+  const runGateOp = async (fn: string, args: Record<string, unknown>, onDone: () => void) => {
+    const { error } = await supabase!.rpc(fn, args);
+    if (error) setSyncError(`Refused by server: ${error.message}`);
+    else onDone();
+  };
+
   const checkInVisitor = (passId: string, parkingBayId?: string) => {
     const pass = visitorPasses.find((p) => p.id === passId || p.passCode === passId);
     if (!pass || !isPassUsable(pass)) return;
+    if (supabase) {
+      void runGateOp('check_in', { p_pass_id: pass.id, p_bay: parkingBayId || null }, () =>
+        triggerGateOpen(`Guest ${pass.guestName} Checked-In to Unit ${pass.unitNumber}`)
+      );
+      return;
+    }
 
     const targetBay = pickBay(parkingSpaces, parkingBayId || pass.assignedParkingBay, !!pass.vehiclePlate);
 
@@ -240,6 +306,17 @@ export const SystemProvider: React.FC<{ children: React.ReactNode; guardName?: s
     assignedParkingBay?: string;
     notes?: string;
   }) => {
+    if (supabase) {
+      void runGateOp(
+        'walk_in',
+        {
+          p_guest_name: data.guestName, p_unit_number: data.unitNumber, p_visitor_type: data.visitorType,
+          p_vehicle_plate: data.vehiclePlate || null, p_bay: data.assignedParkingBay || null, p_notes: data.notes || null,
+        },
+        () => triggerGateOpen(`Manual entry: ${data.guestName} (${data.visitorType}) to Unit ${data.unitNumber}`)
+      );
+      return;
+    }
     const targetBay = pickBay(parkingSpaces, data.assignedParkingBay, !!data.vehiclePlate);
     const newLog: VisitorLog = {
       id: `vl-${crypto.randomUUID()}`,
@@ -278,6 +355,10 @@ export const SystemProvider: React.FC<{ children: React.ReactNode; guardName?: s
   const checkoutVisitorLog = (logId: string) => {
     const log = visitorLogs.find((l) => l.id === logId);
     if (!log) return;
+    if (supabase) {
+      void runGateOp('check_out', { p_log_id: logId }, () => {});
+      return;
+    }
 
     setVisitorLogs((prev) =>
       prev.map((l) =>
@@ -312,7 +393,7 @@ export const SystemProvider: React.FC<{ children: React.ReactNode; guardName?: s
     const newPass: VisitorPass = {
       ...data,
       id: `vp-${crypto.randomUUID()}`,
-      passCode: `QR-${Math.floor(10000 + Math.random() * 90000)}`,
+      passCode: newPassCode(),
       status: 'Active',
       createdAt: new Date().toISOString(),
     };
@@ -385,6 +466,10 @@ export const SystemProvider: React.FC<{ children: React.ReactNode; guardName?: s
         activeGateMessage,
         addRealUnit,
         addRealParkingSpace,
+        updateUnit,
+        updateParkingSpace,
+        deleteUnit,
+        deleteParkingSpace,
         checkInVisitor,
         quickManualCheckIn,
         checkoutVisitorLog,

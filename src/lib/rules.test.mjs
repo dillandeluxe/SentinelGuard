@@ -1,6 +1,6 @@
 // Run: node src/lib/rules.test.mjs (Node 22.6+ strips the TS types)
 import assert from 'node:assert/strict';
-import { isPassUsable, isPassExpired, isOverstay, formatDuration, toCsv, pickBay, formatTime } from './rules.ts';
+import { isPassUsable, isPassExpired, isOverstay, formatDuration, toCsv, pickBay, formatTime, unitDeleteBlocker, bayDeleteBlocker, unitEntryWarning, newPassCode } from './rules.ts';
 
 const now = Date.parse('2026-10-27T12:00:00Z');
 const pass = { status: 'Active', validFrom: '2026-10-27T10:00:00Z', validUntil: '2026-10-27T14:00:00Z' };
@@ -38,5 +38,25 @@ assert.equal(pickBay([], undefined, true), undefined);
 assert.equal(formatTime('10:42 AM'), '10:42 AM');
 assert.equal(formatTime(undefined), '');
 assert.notEqual(formatTime('2026-10-27T10:42:00Z'), '2026-10-27T10:42:00Z');
+
+const logs = [{ unitNumber: 'A-1', status: 'Inside' }, { unitNumber: 'B-1', status: 'Departed' }];
+const passes = [{ unitNumber: 'C-1', status: 'Active' }, { unitNumber: 'B-1', status: 'Completed' }];
+assert.match(unitDeleteBlocker('A-1', passes, logs), /inside/);
+assert.match(unitDeleteBlocker('C-1', passes, logs), /active/);
+assert.equal(unitDeleteBlocker('B-1', passes, logs), null);
+
+const units = [{ unitNumber: 'A-1', allocatedParkingBay: 'R-1' }];
+assert.match(bayDeleteBlocker({ bayNumber: 'V-1', status: 'Occupied_Visitor' }, units), /in use/);
+assert.match(bayDeleteBlocker({ bayNumber: 'R-1', status: 'Available' }, units), /A-1/);
+assert.equal(bayDeleteBlocker({ bayNumber: 'V-2', status: 'Available' }, units), null);
+
+assert.match(unitEntryWarning(undefined), /no longer registered/);
+assert.match(unitEntryWarning({ unitNumber: 'A-1', status: 'Vacant' }), /vacant/);
+assert.match(unitEntryWarning({ unitNumber: 'A-1', status: 'DoNotDisturb' }), /Do Not Disturb/);
+assert.equal(unitEntryWarning({ unitNumber: 'A-1', status: 'Occupied' }), null);
+
+const codes = Array.from({ length: 2000 }, newPassCode);
+codes.forEach((c) => assert.match(c, /^QR-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/));
+assert.equal(new Set(codes).size, codes.length);
 
 console.log('rules: all checks passed');

@@ -90,7 +90,7 @@ export default function Home() {
   }
 
   return (
-    <SystemProvider guardName={currentUser?.name}>
+    <SystemProvider guardName={currentUser?.name} role={currentUser?.role}>
       <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-black">
         {/* Precision Hardware Top Bar */}
         <header className="bg-slate-950/80 backdrop-blur-xl border-b border-white/10 sticky top-0 z-40">

@@ -2,7 +2,7 @@
 
 import React, { useCallback, useState } from 'react';
 import { useSystem } from '../lib/store';
-import { formatTime } from '../lib/rules';
+import { formatTime, unitEntryWarning } from '../lib/rules';
 import { QrScanner } from './QrScanner';
 import { 
   ShieldCheck, 
@@ -57,7 +57,7 @@ export const GuardConsole: React.FC = () => {
   // Manual Check-In Form state
   const [showManualModal, setShowManualModal] = useState(false);
   const [manualName, setManualName] = useState('');
-  const [manualUnit, setManualUnit] = useState('A-101');
+  const [manualUnit, setManualUnit] = useState('');
   const [manualPlate, setManualPlate] = useState('');
   const [manualType, setManualType] = useState<'Guest' | 'Delivery' | 'Contractor' | 'VIP'>('Guest');
   const [manualNotes, setManualNotes] = useState('');
@@ -86,12 +86,17 @@ export const GuardConsole: React.FC = () => {
     }
   };
 
+  // The select shows the first unit until the guard picks one, so fall back to it.
+  const manualUnitNumber = manualUnit || units[0]?.unitNumber || '';
+  const manualUnitWarning = manualUnitNumber ? unitEntryWarning(units.find((u) => u.unitNumber === manualUnitNumber)) : null;
+  const passUnitWarning = matchedPass ? unitEntryWarning(units.find((u) => u.unitNumber === matchedPass.unitNumber)) : null;
+
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!manualName.trim()) return;
+    if (!manualName.trim() || !manualUnitNumber) return;
     quickManualCheckIn({
       guestName: manualName,
-      unitNumber: manualUnit,
+      unitNumber: manualUnitNumber,
       vehiclePlate: manualPlate.toUpperCase(),
       visitorType: manualType,
       assignedParkingBay: selectedParkingBay,
@@ -192,7 +197,7 @@ export const GuardConsole: React.FC = () => {
               <div className="relative flex items-center">
                 <input
                   type="text"
-                  placeholder="Scan QR or type code (e.g. QR-89421)..."
+                  placeholder="Scan QR or type code (e.g. QR-7KD9-X2MF)..."
                   value={scanInput}
                   onChange={(e) => {
                     setScanInput(e.target.value);
@@ -300,6 +305,13 @@ export const GuardConsole: React.FC = () => {
                     <span className="text-emerald-300 font-semibold">Unit {matchedPass.unitNumber} ({matchedPass.residentName})</span>
                   </div>
                 </div>
+
+                {passUnitWarning && (
+                  <p role="alert" className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-2.5 text-xs text-amber-200">
+                    <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" aria-hidden="true" />
+                    {passUnitWarning}
+                  </p>
+                )}
 
                 {/* Parking Space Selector */}
                 <div className="pt-1">
@@ -521,7 +533,7 @@ export const GuardConsole: React.FC = () => {
                 <div>
                   <label className="text-xs font-mono text-slate-400 block mb-1">Visiting Unit *</label>
                   <select
-                    value={manualUnit}
+                    value={manualUnitNumber}
                     onChange={(e) => setManualUnit(e.target.value)}
                     className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
                   >
@@ -585,6 +597,13 @@ export const GuardConsole: React.FC = () => {
                   className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
                 />
               </div>
+
+              {manualUnitWarning && (
+                <p role="alert" className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-2.5 text-xs text-amber-200">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" aria-hidden="true" />
+                  {manualUnitWarning}
+                </p>
+              )}
 
               <div className="pt-2 flex gap-3">
                 <button

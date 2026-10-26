@@ -36,7 +36,8 @@ Without this the app runs in **demo mode**: data stays in one browser and any pa
 2. Open **SQL Editor**, paste all of `supabase/schema.sql` and run it.
 3. Copy **Project URL** and **anon public key** (Project Settings → API) into a `.env.local` file, using `.env.example` as the template. Restart `npm run dev`.
 4. For the live site: add the same two values under GitHub → repo **Settings → Secrets and variables → Actions → Variables**, then push to `main`.
-5. Sign up in the app. Every new account is a **Resident** with no unit. In Supabase → **Table Editor → profiles**, set your own `role` to `Admin`. For residents, set `unitNumber` (it must match a unit you registered); for guards, set `role` to `Guard`.
+5. Sign up in the app. Every new account is a **Resident** with no unit. Make the first admin by hand: Supabase → **Table Editor → profiles**, set your own `role` to `Admin`.
+6. After that, manage everyone else in the app: **Analytics & Setup → Users & Access**. Set guards to `Guard`, and link each resident to their unit. People see the change the next time they sign in.
 
 From then on the role comes from the account. Residents only see their own unit, and the guard tablet sees new passes instantly.
 
@@ -62,12 +63,14 @@ From then on the role comes from the account. Residents only see their own unit,
 The app starts empty. Log in as **Admin**, open **Analytics & Setup** and add data:
 - **Register Unit & Resident:** unit number, block, floor, resident name and phone, allocated bay, and vehicle plates (separated by commas). Plates listed here open the gate automatically through LPR.
 - **Register Parking Bay:** bay number, type (Visitor, Resident, EV or Handicap) and zone.
+- Each form has a list underneath. Use the **pencil** to edit a row (the form switches to *Edit*), and the **bin** to delete it (click twice to confirm). Deleting is refused while a unit still has a visitor inside or active passes, or while a bay is occupied or allocated to a unit.
+- Set a unit's **Status** to *Do not disturb* or *Vacant* and the guard gets a warning before letting anyone in to it.
 
 Data is saved in this browser and survives refreshes and logouts. To wipe it, clear the site data in your browser.
 
 ### 3. Guard Console (main guard screen)
 - **Actuate Barrier Arm**: opens the gate manually. The status goes Closed → Opening → Open → Closed over about 5 seconds.
-- **Guest Pass Verification**: type a pass code (for example `QR-12345`) and press **Verify**. If it matches an active pass, press **Authorize & Lift Barrier** to check the guest in.
+- **Guest Pass Verification**: type a pass code (for example `QR-7KD9-X2MF`) and press **Verify**. If it matches an active pass, press **Authorize & Lift Barrier** to check the guest in.
 - **Walk-In Registration**: for guests without a pass (couriers, contractors). Fill in name, unit, category, plate, bay and notes. Saving logs the visit and opens the gate.
 - **Resident Directory**: search by unit number or resident name to see their phone number and parking bay.
 - **Live On-Site Property Logbook**: everyone currently inside. Press **Check-Out** when they leave.
@@ -101,7 +104,7 @@ Data is saved in this browser and survives refreshes and logouts. To wipe it, cl
 
 ## Known limitations
 
-- **Units and bays can be added but not edited or deleted** from the app yet.
+- **Unit and bay numbers can't be renamed** (other records point at them). Delete and re-add instead, once nothing is using them.
 - The LPR preset plates (`SJK-8821`, `LHM-4491`) only match if you register them on a unit or a guest pass.
 - **In demo mode, data lives only in this browser.** Connect Supabase to share data between devices.
 - **In demo mode, login is fake.** Any password works and anyone can choose any role. Connect Supabase for real accounts.
