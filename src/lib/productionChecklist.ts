@@ -13,7 +13,7 @@ export const productionChecklist: ChecklistItem[] = [
     category: 'Security & Auth',
     title: 'Replace Mock Auth with NextAuth.js / Supabase Auth',
     description: 'Implement JWT/OAuth2 authentication with HTTP-only cookies, role-based access control (RBAC), and session expiration.',
-    status: 'Pending_Production',
+    status: 'In_Progress',
     priority: 'Critical',
   },
   {
@@ -29,7 +29,7 @@ export const productionChecklist: ChecklistItem[] = [
     category: 'Database & Storage',
     title: 'Connect PostgreSQL Database via Prisma ORM',
     description: 'Migrate mock in-memory state store to a resilient PostgreSQL schema with proper foreign key indexes on Unit, VisitorPass, and ParkingBay.',
-    status: 'Pending_Production',
+    status: 'In_Progress',
     priority: 'Critical',
   },
   {
@@ -53,7 +53,7 @@ export const productionChecklist: ChecklistItem[] = [
     category: 'Performance & PWA',
     title: 'Service Worker Offline Caching & Background Sync',
     description: 'Ensure guard tablet PWA buffers visitor entries locally in IndexedDB when guardhouse Wi-Fi drops, and syncs automatically when online.',
-    status: 'Completed_In_Demo',
+    status: 'Pending_Production',
     priority: 'Critical',
   },
   {

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useSystem } from '../lib/store';
 import { ParkingBayType } from '../lib/types';
-import { toCsv } from '../lib/rules';
+import { toCsv, formatTime } from '../lib/rules';
 import { 
   BarChart3, 
   Users, 
@@ -318,7 +318,7 @@ export const AdminDashboard: React.FC = () => {
                 <div key={log.id} className="p-2.5 bg-slate-950/70 border border-white/5 rounded-lg space-y-1">
                   <div className="flex justify-between font-medium">
                     <span className="text-white font-sans">{log.guestName}</span>
-                    <span className="text-slate-500 text-xs">{log.entryTime}</span>
+                    <span className="text-slate-500 text-xs">{formatTime(log.entryTime)}</span>
                   </div>
                   <div className="flex justify-between text-slate-400 text-xs">
                     <span>Officer: <span className="text-slate-200">{log.guardName}</span></span>

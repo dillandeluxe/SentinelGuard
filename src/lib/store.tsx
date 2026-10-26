@@ -1,8 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { supabase } from './supabase';
 import { Unit, VisitorPass, VisitorLog, ParkingSpace, LPRDetection } from './types';
-import { isPassUsable, isPassExpired, isOverstay } from './rules';
+import { isPassUsable, isPassExpired, isOverstay, pickBay } from './rules';
 import { initialUnits, initialVisitorPasses, initialVisitorLogs, initialParkingSpaces, initialLPRDetections } from './mockData';
 
 interface SystemContextType {
@@ -35,7 +36,7 @@ interface SystemContextType {
 
 const SystemContext = createContext<SystemContextType | undefined>(undefined);
 
-// shortcut: per-browser localStorage only, no sync between devices; replace with a real database (see prisma/schema.prisma).
+// Demo mode (no Supabase keys) keeps data in this browser only.
 const STORAGE_KEY = 'sentinelguard:v1';
 
 const loadSaved = (): Partial<Pick<SystemContextType, 'units' | 'visitorPasses' | 'visitorLogs' | 'parkingSpaces' | 'lprDetections'>> => {
@@ -46,16 +47,91 @@ const loadSaved = (): Partial<Pick<SystemContextType, 'units' | 'visitorPasses' 
   }
 };
 
+type Key = 'units' | 'visitorPasses' | 'visitorLogs' | 'parkingSpaces' | 'lprDetections';
+type Row = { id: string };
+// Table name, and the column the initial load sorts by (newest first unless ascending).
+const TABLES: Record<Key, [table: string, orderBy: string, ascending: boolean]> = {
+  units: ['units', 'unitNumber', true],
+  visitorPasses: ['visitor_passes', 'createdAt', false],
+  visitorLogs: ['visitor_logs', 'entryTime', false],
+  parkingSpaces: ['parking_spaces', 'bayNumber', true],
+  lprDetections: ['lpr_detections', 'id', false],
+};
+// undefined means "cleared" in our state; JSON would drop it, so send null.
+const toDb = (row: object) => Object.fromEntries(Object.entries(row).map(([k, v]) => [k, v ?? null]));
+
 // Mounted only after login (client-side), so reading storage in initial state can't cause a hydration mismatch.
 export const SystemProvider: React.FC<{ children: React.ReactNode; guardName?: string }> = ({ children, guardName = 'Unknown Officer' }) => {
-  const [saved] = useState(loadSaved);
+  const [saved] = useState(() => (supabase ? {} : loadSaved()));
   const [units, setUnits] = useState<Unit[]>(saved.units ?? initialUnits);
   const [visitorPasses, setVisitorPasses] = useState<VisitorPass[]>(saved.visitorPasses ?? initialVisitorPasses);
   const [visitorLogs, setVisitorLogs] = useState<VisitorLog[]>(saved.visitorLogs ?? initialVisitorLogs);
   const [parkingSpaces, setParkingSpaces] = useState<ParkingSpace[]>(saved.parkingSpaces ?? initialParkingSpaces);
   const [lprDetections, setLprDetections] = useState<LPRDetection[]>(saved.lprDetections ?? initialLPRDetections);
 
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const state: Record<Key, Row[]> = { units, visitorPasses, visitorLogs, parkingSpaces, lprDetections };
+  const lastSynced = useRef(state);
+  const fromServer = useRef(new WeakSet<object>());
+
+  // Supabase: load everything this user may see (RLS decides), then merge live changes from other devices.
   useEffect(() => {
+    if (!supabase) return;
+    const db = supabase;
+    const setters = {
+      units: setUnits, visitorPasses: setVisitorPasses, visitorLogs: setVisitorLogs,
+      parkingSpaces: setParkingSpaces, lprDetections: setLprDetections,
+    } as unknown as Record<Key, React.Dispatch<React.SetStateAction<Row[]>>>;
+    const merge = (key: Key, rows: Row[]) => {
+      rows.forEach((row) => fromServer.current.add(row));
+      setters[key]((prev) => {
+        const incoming = new Map(rows.map((row) => [row.id, row]));
+        const updated = prev.map((row) => incoming.get(row.id) ?? row);
+        const added = rows.filter((row) => !prev.some((p) => p.id === row.id));
+        return [...added, ...updated];
+      });
+    };
+    (Object.keys(TABLES) as Key[]).forEach(async (key) => {
+      const [table, orderBy, ascending] = TABLES[key];
+      const { data, error } = await db.from(table).select('*').order(orderBy, { ascending });
+      if (error) setSyncError(`Could not load ${table}: ${error.message}`);
+      else merge(key, data);
+    });
+    const channel = db
+      .channel('sentinelguard')
+      .on('postgres_changes', { event: '*', schema: 'public' }, (change) => {
+        const key = (Object.keys(TABLES) as Key[]).find((k) => TABLES[k][0] === change.table);
+        if (key && 'id' in change.new) merge(key, [change.new as Row]);
+      })
+      .subscribe();
+    return () => {
+      db.removeChannel(channel);
+    };
+  }, []);
+
+  // Supabase: write every row this device changed. Rows that came from the server are skipped so they don't echo back.
+  useEffect(() => {
+    if (!supabase) return;
+    const db = supabase;
+    (Object.keys(TABLES) as Key[]).forEach((key) => {
+      const prev = lastSynced.current[key];
+      if (prev === state[key]) return;
+      const prevRows = new Set<object>(prev);
+      const prevIds = new Set(prev.map((row) => row.id));
+      state[key].forEach(async (row) => {
+        if (prevRows.has(row) || fromServer.current.has(row)) return;
+        const table = db.from(TABLES[key][0]);
+        // Separate insert/update (not upsert): upsert also needs insert rights, which guards don't have on parking.
+        const { error } = prevIds.has(row.id) ? await table.update(toDb(row)).eq('id', row.id) : await table.insert(toDb(row));
+        if (error) setSyncError(`Not saved to server (${TABLES[key][0]}): ${error.message}`);
+      });
+    });
+    lastSynced.current = state;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `state` is rebuilt from exactly these each render
+  }, [units, visitorPasses, visitorLogs, parkingSpaces, lprDetections]);
+
+  useEffect(() => {
+    if (supabase) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ units, visitorPasses, visitorLogs, parkingSpaces, lprDetections }));
     } catch {
@@ -85,7 +161,7 @@ export const SystemProvider: React.FC<{ children: React.ReactNode; guardName?: s
   const addRealUnit = (data: Omit<Unit, 'id'>) => {
     const newUnit: Unit = {
       ...data,
-      id: `u-${Date.now()}`,
+      id: `u-${crypto.randomUUID()}`,
     };
     setUnits((prev) => [newUnit, ...prev]);
   };
@@ -93,7 +169,7 @@ export const SystemProvider: React.FC<{ children: React.ReactNode; guardName?: s
   const addRealParkingSpace = (data: Omit<ParkingSpace, 'id'>) => {
     const newSpace: ParkingSpace = {
       ...data,
-      id: `ps-${Date.now()}`,
+      id: `ps-${crypto.randomUUID()}`,
     };
     setParkingSpaces((prev) => [...prev, newSpace]);
   };
@@ -114,6 +190,8 @@ export const SystemProvider: React.FC<{ children: React.ReactNode; guardName?: s
     const pass = visitorPasses.find((p) => p.id === passId || p.passCode === passId);
     if (!pass || !isPassUsable(pass)) return;
 
+    const targetBay = pickBay(parkingSpaces, parkingBayId || pass.assignedParkingBay, !!pass.vehiclePlate);
+
     // Update pass status
     setVisitorPasses((prev) =>
       prev.map((p) => (p.id === pass.id ? { ...p, status: 'CheckedIn' } : p))
@@ -121,25 +199,23 @@ export const SystemProvider: React.FC<{ children: React.ReactNode; guardName?: s
 
     // Create log
     const newLog: VisitorLog = {
-      id: `vl-${Date.now()}`,
+      id: `vl-${crypto.randomUUID()}`,
       passId: pass.id,
       guestName: pass.guestName,
       visitorType: pass.visitorType,
       unitNumber: pass.unitNumber,
       vehiclePlate: pass.vehiclePlate,
-      entryTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      entryTime: new Date().toISOString(),
       guardName,
-      assignedParkingBay: parkingBayId || pass.assignedParkingBay || 'V-01',
+      assignedParkingBay: targetBay,
       status: 'Inside',
     };
     setVisitorLogs((prev) => [newLog, ...prev]);
 
-    // Occupy parking space if assigned
-    const targetBay = parkingBayId || pass.assignedParkingBay;
     if (targetBay) {
       setParkingSpaces((prev) =>
         prev.map((ps) =>
-          ps.bayNumber === targetBay || ps.id === targetBay
+          ps.bayNumber === targetBay
             ? {
                 ...ps,
                 status: 'Occupied_Visitor',
@@ -164,24 +240,25 @@ export const SystemProvider: React.FC<{ children: React.ReactNode; guardName?: s
     assignedParkingBay?: string;
     notes?: string;
   }) => {
+    const targetBay = pickBay(parkingSpaces, data.assignedParkingBay, !!data.vehiclePlate);
     const newLog: VisitorLog = {
-      id: `vl-${Date.now()}`,
+      id: `vl-${crypto.randomUUID()}`,
       guestName: data.guestName,
       visitorType: data.visitorType,
       unitNumber: data.unitNumber,
       vehiclePlate: data.vehiclePlate,
-      entryTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      entryTime: new Date().toISOString(),
       guardName,
-      assignedParkingBay: data.assignedParkingBay || 'V-05',
+      assignedParkingBay: targetBay,
       status: 'Inside',
       notes: data.notes,
     };
     setVisitorLogs((prev) => [newLog, ...prev]);
 
-    if (data.assignedParkingBay) {
+    if (targetBay) {
       setParkingSpaces((prev) =>
         prev.map((ps) =>
-          ps.bayNumber === data.assignedParkingBay || ps.id === data.assignedParkingBay
+          ps.bayNumber === targetBay
             ? {
                 ...ps,
                 status: 'Occupied_Visitor',
@@ -208,7 +285,7 @@ export const SystemProvider: React.FC<{ children: React.ReactNode; guardName?: s
           ? {
               ...l,
               status: 'Departed',
-              exitTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              exitTime: new Date().toISOString(),
             }
           : l
       )
@@ -234,7 +311,7 @@ export const SystemProvider: React.FC<{ children: React.ReactNode; guardName?: s
   const createVisitorPass = (data: Omit<VisitorPass, 'id' | 'createdAt' | 'status' | 'passCode'>): VisitorPass => {
     const newPass: VisitorPass = {
       ...data,
-      id: `vp-${Date.now()}`,
+      id: `vp-${crypto.randomUUID()}`,
       passCode: `QR-${Math.floor(10000 + Math.random() * 90000)}`,
       status: 'Active',
       createdAt: new Date().toISOString(),
@@ -282,7 +359,7 @@ export const SystemProvider: React.FC<{ children: React.ReactNode; guardName?: s
     }
 
     const newDetection: LPRDetection = {
-      id: `lpr-${Date.now()}`,
+      id: `lpr-${crypto.randomUUID()}`,
       plateNumber: plateNumber.toUpperCase(),
       confidence: +(95 + Math.random() * 4).toFixed(1),
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
@@ -317,6 +394,12 @@ export const SystemProvider: React.FC<{ children: React.ReactNode; guardName?: s
         simulateLPRScan,
       }}
     >
+      {syncError && (
+        <div role="alert" className="fixed bottom-4 inset-x-4 z-50 mx-auto max-w-xl rounded-lg border border-rose-500/40 bg-rose-950/90 p-3 text-xs text-rose-200 flex justify-between gap-3">
+          <span>{syncError}</span>
+          <button onClick={() => setSyncError(null)} className="font-bold text-rose-100" aria-label="Dismiss sync error">✕</button>
+        </div>
+      )}
       {children}
     </SystemContext.Provider>
   );

@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useSystem } from '../lib/store';
+import { formatTime } from '../lib/rules';
+import { QrScanner } from './QrScanner';
 import { 
   ShieldCheck, 
   QrCode, 
@@ -43,7 +45,14 @@ export const GuardConsole: React.FC = () => {
   const [scanInput, setScanInput] = useState('');
   const [selectedPassId, setSelectedPassId] = useState<string | null>(null);
   const [unitSearch, setUnitSearch] = useState('');
-  const [selectedParkingBay, setSelectedParkingBay] = useState<string>('V-01');
+  const [scanning, setScanning] = useState(false);
+  // Stable so the scanner doesn't restart the camera on every render.
+  const handleQrScan = useCallback((text: string) => {
+    setScanInput(text);
+    setSelectedPassId(null);
+    setScanning(false);
+  }, []);
+  const [selectedParkingBay, setSelectedParkingBay] = useState<string>('');
 
   // Manual Check-In Form state
   const [showManualModal, setShowManualModal] = useState(false);
@@ -201,6 +210,16 @@ export const GuardConsole: React.FC = () => {
                   <span>Verify</span>
                 </button>
               </div>
+              <button
+                type="button"
+                onClick={() => setScanning((v) => !v)}
+                aria-pressed={scanning}
+                className="btn-tactile px-3 min-h-11 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-white/10 text-sm font-medium rounded-lg flex items-center gap-1.5"
+              >
+                <Camera className="w-3.5 h-3.5 text-emerald-400" />
+                <span>{scanning ? 'Stop Camera' : 'Scan with Camera'}</span>
+              </button>
+              {scanning && <QrScanner onScan={handleQrScan} />}
             </form>
 
             {/* Expected Arrivals Carousel/List */}
@@ -293,6 +312,7 @@ export const GuardConsole: React.FC = () => {
                     onChange={(e) => setSelectedParkingBay(e.target.value)}
                     className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
                   >
+                    <option value="">Auto (first free bay if vehicle)</option>
                     {availableVisitorBays.map((bay) => (
                       <option key={bay.id} value={bay.bayNumber}>
                         {bay.bayNumber} — {bay.zone} ({bay.type})
@@ -430,7 +450,7 @@ export const GuardConsole: React.FC = () => {
                     <td className="p-3 font-bold text-emerald-300">{log.unitNumber}</td>
                     <td className="p-3 text-slate-200">{log.vehiclePlate || 'N/A'}</td>
                     <td className="p-3 text-emerald-400 font-semibold">{log.assignedParkingBay || 'N/A'}</td>
-                    <td className="p-3 text-slate-400">{log.entryTime}</td>
+                    <td className="p-3 text-slate-400">{formatTime(log.entryTime)}</td>
                     <td className="p-3">
                       {log.status === 'Inside' ? (
                         <span className={`px-2 py-0.5 rounded text-xs font-bold border flex items-center gap-1 w-max ${
@@ -443,7 +463,7 @@ export const GuardConsole: React.FC = () => {
                         </span>
                       ) : (
                         <span className="px-2 py-0.5 rounded text-xs bg-slate-900 text-slate-500 border border-white/5">
-                          Departed ({log.exitTime})
+                          Departed ({formatTime(log.exitTime)})
                         </span>
                       )}
                     </td>
@@ -545,6 +565,7 @@ export const GuardConsole: React.FC = () => {
                     onChange={(e) => setSelectedParkingBay(e.target.value)}
                     className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-emerald-500"
                   >
+                    <option value="">Auto (first free bay if vehicle)</option>
                     {availableVisitorBays.map((bay) => (
                       <option key={bay.id} value={bay.bayNumber}>
                         {bay.bayNumber} ({bay.type})

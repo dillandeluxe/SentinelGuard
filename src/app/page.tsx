@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { SystemProvider } from '../lib/store';
+import { supabase } from '../lib/supabase';
 import { LandingScreen } from '../components/LandingScreen';
 import { AuthPortal } from '../components/AuthPortal';
 import { GuardConsole } from '../components/GuardConsole';
@@ -35,7 +36,7 @@ const ALL_TABS = [
   { id: 'Admin', label: 'Analytics & Setup', Icon: BarChart3 },
 ] as const;
 
-// shortcut: UI-only gating, any user can still pick any role at login; enforce on a server once real auth exists.
+// Convenience only. With Supabase, the database (RLS) enforces roles; in demo mode anyone can pick any role.
 const ROLE_TABS: Record<Role, Tab[]> = {
   Guard: ['Guard', 'Parking', 'LPR'],
   Resident: ['Resident'],
@@ -59,6 +60,7 @@ export default function Home() {
   };
 
   const handleLogout = () => {
+    supabase?.auth.signOut();
     setCurrentUser(null);
     setViewState('Landing');
   };
@@ -68,7 +70,7 @@ export default function Home() {
       <>
         <LandingScreen
           onStartLogin={() => setViewState('Auth')}
-          onDirectDemo={() => handleLoginSuccess('Guard', 'Officer Marcus Miller (Demo)')}
+          onDirectDemo={() => (supabase ? setViewState('Auth') : handleLoginSuccess('Guard', 'Officer Marcus Miller (Demo)'))}
           onOpenChecklist={() => setShowChecklistModal(true)}
         />
         {showChecklistModal && (

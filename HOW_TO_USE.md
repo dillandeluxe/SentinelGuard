@@ -29,6 +29,17 @@ npm run dev
 
 Open http://localhost:3000/SentinelGuard. The `/SentinelGuard` part is needed because `next.config.ts` sets `basePath` for GitHub Pages.
 
+### Connecting the real database (Supabase)
+Without this the app runs in **demo mode**: data stays in one browser and any password works.
+
+1. Create a free project at supabase.com.
+2. Open **SQL Editor**, paste all of `supabase/schema.sql` and run it.
+3. Copy **Project URL** and **anon public key** (Project Settings → API) into a `.env.local` file, using `.env.example` as the template. Restart `npm run dev`.
+4. For the live site: add the same two values under GitHub → repo **Settings → Secrets and variables → Actions → Variables**, then push to `main`.
+5. Sign up in the app. Every new account is a **Resident** with no unit. In Supabase → **Table Editor → profiles**, set your own `role` to `Admin`. For residents, set `unitNumber` (it must match a unit you registered); for guards, set `role` to `Guard`.
+
+From then on the role comes from the account. Residents only see their own unit, and the guard tablet sees new passes instantly.
+
 ---
 
 ## Walkthrough
@@ -92,10 +103,8 @@ Data is saved in this browser and survives refreshes and logouts. To wipe it, cl
 
 - **Units and bays can be added but not edited or deleted** from the app yet.
 - The LPR preset plates (`SJK-8821`, `LHM-4491`) only match if you register them on a unit or a guest pass.
-- **Data lives only in this browser.** The guard tablet and a resident's phone do **not** share data. That needs a real database.
-- **Login is fake.** Any password works and anyone can choose any role. Hiding tabs by role is for convenience, not security.
-- Residents can issue passes for any unit, because accounts aren't linked to units yet.
-- **The QR "scanner" is a text box.** There is no camera scanning yet.
-- **Export Audit Log (CSV)** only shows a popup.
-- **Overstay warnings** are never triggered automatically.
+- **In demo mode, data lives only in this browser.** Connect Supabase to share data between devices.
+- **In demo mode, login is fake.** Any password works and anyone can choose any role. Connect Supabase for real accounts.
+- In demo mode, residents can issue passes for any unit.
+- **Camera QR scanning** needs HTTPS or localhost (the live GitHub Pages site is HTTPS).
 - **Offline mode / installing as an app** doesn't work yet (there's no service worker, and the manifest paths don't include `/SentinelGuard`).

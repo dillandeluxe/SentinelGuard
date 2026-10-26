@@ -22,6 +22,20 @@ export const formatDuration = (iso: string, now = Date.now()) => {
   return mins < 60 ? `${mins}m` : `${Math.floor(mins / 60)}h ${mins % 60}m`;
 };
 
+// Requested bay if it's free; otherwise a guest with a car gets the first free visitor bay, a guest on foot gets none.
+export const pickBay = (spaces: ParkingSpace[], requested: string | undefined, hasVehicle: boolean) => {
+  const free = (ps: ParkingSpace) => ps.status === 'Available';
+  if (requested && spaces.some((ps) => ps.bayNumber === requested && free(ps))) return requested;
+  return hasVehicle ? spaces.find((ps) => ps.type === 'Visitor' && free(ps))?.bayNumber : undefined;
+};
+
+// Legacy logs stored "10:42 AM"; show those as-is.
+export const formatTime = (iso?: string) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
+
 const csvCell = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
 export const toCsv = (rows: Record<string, unknown>[]) => {
   if (!rows.length) return '';

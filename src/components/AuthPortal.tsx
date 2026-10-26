@@ -15,6 +15,7 @@ import {
   ShieldAlert,
   SlidersHorizontal
 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 interface AuthPortalProps {
   onLoginSuccess: (userRole: 'Guard' | 'Resident' | 'Admin', username: string) => void;
@@ -33,6 +34,8 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState('');
   const [unitOrGate, setUnitOrGate] = useState('');
+  const [message, setMessage] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   // Preset demo fillers
   const fillGuardPreset = () => {
@@ -59,8 +62,33 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({
     setUnitOrGate('Security Ops Center');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (supabase) {
+      // Real auth: the role comes from the account's profile row, never from this form.
+      setBusy(true);
+      setMessage(null);
+      try {
+        if (isSignUp) {
+          const { error } = await supabase.auth.signUp({ email, password, options: { data: { name: fullName.trim() } } });
+          if (error) throw error;
+          setIsSignUp(false);
+          setMessage('Account created. Confirm your email if asked, then ask the admin to link your unit before signing in.');
+          return;
+        }
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles').select('name, role').eq('id', data.user.id).single();
+        if (profileError) throw profileError;
+        onLoginSuccess(profile.role, profile.name || email.split('@')[0]);
+      } catch (err) {
+        setMessage(err instanceof Error ? err.message : String(err));
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
     const displayName = fullName.trim() || email.split('@')[0] || `${selectedRole} User`;
     onLoginSuccess(selectedRole, displayName);
   };
@@ -108,6 +136,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({
             </p>
           </div>
 
+          {!supabase && (<>
           {/* Role Segmented Switcher */}
           <div className="space-y-1.5">
             <label className="text-xs font-mono text-slate-500 uppercase tracking-wider block text-center">
@@ -160,6 +189,8 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({
               </button>
             </div>
           </div>
+
+          </>)}
 
           {/* Credentials Form */}
           <form onSubmit={handleSubmit} className="space-y-3.5">
@@ -221,6 +252,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({
               </div>
             </div>
 
+            {!supabase && (
             <div>
               <label className="text-xs font-mono text-slate-400 block mb-1">
                 Post / Unit Assignment
@@ -236,13 +268,21 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({
                 <Building2 className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
               </div>
             </div>
+            )}
+
+            {message && (
+              <p role="status" className="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg p-2.5">
+                {message}
+              </p>
+            )}
 
             <button
               type="submit"
+              disabled={busy}
               className="btn-tactile w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 mt-3"
             >
               <UserCheck className="w-4 h-4" />
-              <span>{isSignUp ? 'Enroll Profile' : `Authenticate as ${selectedRole}`}</span>
+              <span>{isSignUp ? 'Enroll Profile' : supabase ? 'Sign In' : `Authenticate as ${selectedRole}`}</span>
             </button>
           </form>
 

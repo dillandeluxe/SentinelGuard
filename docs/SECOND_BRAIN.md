@@ -85,7 +85,7 @@ Because the site is a static export, a real backend has to live **somewhere else
 | Work | Least | More, but more "classic full-stack" |
 
 **Recommendation: A (Supabase).** The guard tablet needs to see a pass the instant a resident creates it on their phone; Realtime gives that for free, and RLS enforces roles in the database rather than in the UI.
-**Status: ⏳ waiting on the owner's decision.** Everything in Phase 2 depends on it.
+**Status: ✅ decided 2026-10-27: Supabase.** Code is in; it switches on when the two keys are set (see `HOW_TO_USE.md` → Connecting the real database). Without keys the app stays in demo mode.
 
 ---
 
@@ -100,26 +100,29 @@ Priority: **P0** breaks the core loop or security · **P1** needed to call it co
 - [x] **P1** Logs record the real logged-in guard, not "Officer Miller" *(2026-10-27)*
 - [x] **P1** Export Audit Log produces a real CSV download *(2026-10-27)*
 - [x] **P1** Resident "My Parking": Resident Pass tab shows the unit's own bay and every bay its guests occupy, with plate and time parked *(2026-10-27)*
-- [ ] **P1** Visitor log times are still locale strings without a date (`"10:42 AM"`); store ISO like parking bays do, so exports and history work across days
+- [x] **P1** Visitor log times stored as ISO, shown with date *(2026-10-27)*
 - [ ] **P1** Edit / delete units and bays (admin) — today they can only be added
-- [ ] **P1** Resident is tied to their own unit (cannot issue passes for other units)
-- [ ] **P1** Prevent double-booking a bay; walk-in should default to a free visitor bay, not a hard-coded `V-05`
+- [x] **P1** Resident is tied to their own unit: `profiles.unitNumber` + RLS, so they only see/issue for that unit *(Supabase mode, 2026-10-27)*
+- [x] **P1** No double-booking or made-up bays: `pickBay` uses the chosen bay only if free, else first free visitor bay for a car, none on foot *(2026-10-27)*
 - [ ] **P1** Unit status (`DoNotDisturb`, `Vacant`) actually blocks or warns on check-in
 - [ ] **P2** Blacklist: admin can flag a plate/name → LPR returns `Blacklisted` / `Deny_Entry` (types already exist)
 - [ ] **P2** Search/filter history in the logbook (by date, unit, plate)
 
 ### Phase 2: Real system (needs the backend decision)
-- [ ] **P0** Database: create tables from `schema.prisma`; replace localStorage reads/writes in `store.tsx` with backend calls
-- [ ] **P0** Real auth; role stored on the user record, not chosen at login
-- [ ] **P0** Server-side permissions (RLS or server checks): residents see only their unit; guards can't edit setup; only admins export
-- [ ] **P0** Live sync: a pass created on a phone appears on the guard tablet without refresh
+- [x] **P0** Database: `supabase/schema.sql`; `store.tsx` loads from and writes to Supabase *(2026-10-27)*
+- [x] **P0** Real auth (Supabase email/password); role read from `profiles`, not chosen at login *(2026-10-27)*
+- [x] **P0** Row-Level Security: residents see only their unit; only admins write units/bays/roles; nobody can delete logs *(2026-10-27)*
+- [ ] **P1** CSV export is still built from what the browser has loaded; move to a server-side export for admins only
+- [x] **P0** Live sync via Supabase Realtime *(2026-10-27; needs a two-device test once keys are set)*
+- [ ] **P1** Concurrent edits are last-write-wins per row; fine for one gate, revisit with several guard tablets
+- [ ] **P1** Check-in is several separate writes (pass, log, bay); move to one database function so a dropped connection can't leave half a check-in
 - [ ] **P1** Pass codes are unguessable (random 128-bit token in the QR, short code only for typing) and single-use
 - [ ] **P1** Shareable pass link (`/pass/<token>`) that shows the QR to the guest; today it points at a fake domain
 - [ ] **P1** Audit table: every gate open, check-in, override and setup change writes an immutable row (who, what, when, why)
 - [ ] **P1** Admin invites guards/residents instead of open sign-up
 
 ### Phase 3: Gatehouse reality
-- [ ] **P1** Camera QR scanning in Guard Console using the already-installed `html5-qrcode`
+- [x] **P1** Camera QR scanning in Guard Console (`QrScanner.tsx`, `html5-qrcode`) *(2026-10-27; needs HTTPS or localhost)*
 - [ ] **P1** PWA install + offline: service worker, fix manifest paths for `/SentinelGuard`, queue check-ins in IndexedDB while offline and sync after
 - [ ] **P2** LPR: send a camera snapshot to a plate API (e.g. Plate Recognizer) from a small edge script; write results to the `LprDetection` table
 - [ ] **P2** Gate relay: ESP32 / Raspberry Pi + relay that listens for an "open" command (MQTT or HTTPS) from the backend; manual override button stays
@@ -165,3 +168,4 @@ Priority: **P0** breaks the core loop or security · **P1** needed to call it co
 
 ## 7. Change log
 - **2026-10-27**: Created. Phase 1 items done: pass expiry, pass completion on check-out, automatic overstay, real guard name (`store.tsx`), CSV export (`AdminDashboard.tsx`), resident My Parking card (`ResidentPortal.tsx`). Rules are in `src/lib/rules.ts` and checked by `npm test`.
+- **2026-10-27**: Backend chosen (Supabase). Added schema + RLS, real login, live sync, camera QR scan, ISO log times, bay picking. Fixed the Readiness checklist, which wrongly showed offline mode as done.
