@@ -24,10 +24,30 @@ import {
   SlidersHorizontal
 } from 'lucide-react';
 
+type Role = 'Guard' | 'Resident' | 'Admin';
+type Tab = 'Guard' | 'Parking' | 'LPR' | 'Resident' | 'Admin';
+
+const ALL_TABS = [
+  { id: 'Guard', label: 'Guard Console', Icon: ShieldCheck },
+  { id: 'Parking', label: 'Parking Grid', Icon: ParkingSquare },
+  { id: 'LPR', label: 'Optical LPR', Icon: Camera },
+  { id: 'Resident', label: 'Resident Pass', Icon: QrCode },
+  { id: 'Admin', label: 'Analytics & Setup', Icon: BarChart3 },
+] as const;
+
+// shortcut: UI-only gating, any user can still pick any role at login; enforce on a server once real auth exists.
+const ROLE_TABS: Record<Role, Tab[]> = {
+  Guard: ['Guard', 'Parking', 'LPR'],
+  Resident: ['Resident'],
+  Admin: ['Guard', 'Parking', 'LPR', 'Resident', 'Admin'],
+};
+
 export default function Home() {
   const [viewState, setViewState] = useState<'Landing' | 'Auth' | 'App'>('Landing');
-  const [currentUser, setCurrentUser] = useState<{ role: 'Guard' | 'Resident' | 'Admin'; name: string } | null>(null);
-  const [activeTab, setActiveTab] = useState<'Guard' | 'Parking' | 'LPR' | 'Resident' | 'Admin'>('Guard');
+  const [currentUser, setCurrentUser] = useState<{ role: Role; name: string } | null>(null);
+  const [activeTab, setActiveTab] = useState<Tab>('Guard');
+  const allowedTabs = currentUser ? ROLE_TABS[currentUser.role] : [];
+  const tabs = ALL_TABS.filter((t) => allowedTabs.includes(t.id));
   const [showChecklistModal, setShowChecklistModal] = useState(false);
 
   const handleLoginSuccess = (role: 'Guard' | 'Resident' | 'Admin', name: string) => {
@@ -48,10 +68,7 @@ export default function Home() {
       <>
         <LandingScreen
           onStartLogin={() => setViewState('Auth')}
-          onDirectDemo={() => {
-            setCurrentUser({ role: 'Guard', name: 'Officer Marcus Miller (Demo)' });
-            setViewState('App');
-          }}
+          onDirectDemo={() => handleLoginSuccess('Guard', 'Officer Marcus Miller (Demo)')}
           onOpenChecklist={() => setShowChecklistModal(true)}
         />
         {showChecklistModal && (
@@ -101,65 +118,20 @@ export default function Home() {
 
             {/* Hardware Segmented Navigation Switcher */}
             <nav className="flex items-center gap-1 bg-zinc-900/90 p-1 rounded-lg border border-white/10 overflow-x-auto max-w-full">
-              <button
-                onClick={() => setActiveTab('Guard')}
-                className={`btn-tactile px-3 py-1.5 rounded text-xs font-mono font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
-                  activeTab === 'Guard'
-                    ? 'bg-zinc-800 text-emerald-400 border border-emerald-500/30 shadow-sm'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Guard Console</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('Parking')}
-                className={`btn-tactile px-3 py-1.5 rounded text-xs font-mono font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
-                  activeTab === 'Parking'
-                    ? 'bg-zinc-800 text-emerald-400 border border-emerald-500/30 shadow-sm'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <ParkingSquare className="w-3.5 h-3.5" />
-                <span>Parking Grid</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('LPR')}
-                className={`btn-tactile px-3 py-1.5 rounded text-xs font-mono font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
-                  activeTab === 'LPR'
-                    ? 'bg-zinc-800 text-emerald-400 border border-emerald-500/30 shadow-sm'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <Camera className="w-3.5 h-3.5" />
-                <span>Optical LPR</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('Resident')}
-                className={`btn-tactile px-3 py-1.5 rounded text-xs font-mono font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
-                  activeTab === 'Resident'
-                    ? 'bg-zinc-800 text-emerald-400 border border-emerald-500/30 shadow-sm'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <QrCode className="w-3.5 h-3.5" />
-                <span>Resident Pass</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('Admin')}
-                className={`btn-tactile px-3 py-1.5 rounded text-xs font-mono font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
-                  activeTab === 'Admin'
-                    ? 'bg-zinc-800 text-emerald-400 border border-emerald-500/30 shadow-sm'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <BarChart3 className="w-3.5 h-3.5" />
-                <span>Analytics</span>
-              </button>
+              {tabs.map(({ id, label, Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => setActiveTab(id)}
+                  className={`btn-tactile px-3 py-1.5 rounded text-xs font-mono font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
+                    activeTab === id
+                      ? 'bg-zinc-800 text-emerald-400 border border-emerald-500/30 shadow-sm'
+                      : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{label}</span>
+                </button>
+              ))}
             </nav>
 
             {/* User Session & Status */}
@@ -195,11 +167,15 @@ export default function Home() {
 
         {/* Main Content Area */}
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          {activeTab === 'Guard' && <GuardConsole />}
-          {activeTab === 'Parking' && <ParkingMap />}
-          {activeTab === 'LPR' && <LPRSimulator />}
-          {activeTab === 'Resident' && <ResidentPortal />}
-          {activeTab === 'Admin' && <AdminDashboard />}
+          {allowedTabs.includes(activeTab) && (
+            <>
+              {activeTab === 'Guard' && <GuardConsole />}
+              {activeTab === 'Parking' && <ParkingMap />}
+              {activeTab === 'LPR' && <LPRSimulator />}
+              {activeTab === 'Resident' && <ResidentPortal />}
+              {activeTab === 'Admin' && <AdminDashboard />}
+            </>
+          )}
         </main>
 
         {/* Readiness Checklist Modal */}

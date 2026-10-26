@@ -35,6 +35,19 @@ export const ResidentPortal: React.FC = () => {
   const [copied, setCopied] = useState(false);
 
   const activeUnit = units.find((u) => u.id === selectedUnitId) || units[0];
+
+  if (!activeUnit) {
+    return (
+      <div className="card-carbon p-6 flex flex-col items-center justify-center text-center py-14 text-zinc-500 space-y-2">
+        <Building2 className="w-10 h-10 text-zinc-700" />
+        <div className="text-xs font-semibold text-zinc-300">No units registered yet</div>
+        <p className="text-[11px] text-zinc-500 max-w-xs font-mono">
+          An admin must add units under Analytics &amp; Setup before guest passes can be issued.
+        </p>
+      </div>
+    );
+  }
+
   const unitPasses = visitorPasses.filter((p) => p.unitNumber === activeUnit.unitNumber);
 
   const handleGeneratePass = async (e: React.FormEvent) => {
@@ -104,7 +117,7 @@ export const ResidentPortal: React.FC = () => {
         <div className="flex items-center gap-2 bg-zinc-950 p-1.5 rounded-lg border border-white/10">
           <span className="text-[11px] font-mono text-zinc-500 pl-1.5">UNIT:</span>
           <select
-            value={selectedUnitId}
+            value={activeUnit.id}
             onChange={(e) => {
               setSelectedUnitId(e.target.value);
               setGeneratedPass(null);

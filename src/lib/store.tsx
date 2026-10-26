@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Unit, VisitorPass, VisitorLog, ParkingSpace, LPRDetection } from './types';
 import { initialUnits, initialVisitorPasses, initialVisitorLogs, initialParkingSpaces, initialLPRDetections } from './mockData';
 
@@ -34,12 +34,33 @@ interface SystemContextType {
 
 const SystemContext = createContext<SystemContextType | undefined>(undefined);
 
+// shortcut: per-browser localStorage only, no sync between devices; replace with a real database (see prisma/schema.prisma).
+const STORAGE_KEY = 'sentinelguard:v1';
+
+const loadSaved = (): Partial<Pick<SystemContextType, 'units' | 'visitorPasses' | 'visitorLogs' | 'parkingSpaces' | 'lprDetections'>> => {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+  } catch {
+    return {};
+  }
+};
+
+// Mounted only after login (client-side), so reading storage in initial state can't cause a hydration mismatch.
 export const SystemProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [units, setUnits] = useState<Unit[]>(initialUnits);
-  const [visitorPasses, setVisitorPasses] = useState<VisitorPass[]>(initialVisitorPasses);
-  const [visitorLogs, setVisitorLogs] = useState<VisitorLog[]>(initialVisitorLogs);
-  const [parkingSpaces, setParkingSpaces] = useState<ParkingSpace[]>(initialParkingSpaces);
-  const [lprDetections, setLprDetections] = useState<LPRDetection[]>(initialLPRDetections);
+  const [saved] = useState(loadSaved);
+  const [units, setUnits] = useState<Unit[]>(saved.units ?? initialUnits);
+  const [visitorPasses, setVisitorPasses] = useState<VisitorPass[]>(saved.visitorPasses ?? initialVisitorPasses);
+  const [visitorLogs, setVisitorLogs] = useState<VisitorLog[]>(saved.visitorLogs ?? initialVisitorLogs);
+  const [parkingSpaces, setParkingSpaces] = useState<ParkingSpace[]>(saved.parkingSpaces ?? initialParkingSpaces);
+  const [lprDetections, setLprDetections] = useState<LPRDetection[]>(saved.lprDetections ?? initialLPRDetections);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ units, visitorPasses, visitorLogs, parkingSpaces, lprDetections }));
+    } catch {
+      // storage full or blocked (private mode): keep working in memory
+    }
+  }, [units, visitorPasses, visitorLogs, parkingSpaces, lprDetections]);
   const [gateStatus, setGateStatus] = useState<'Closed' | 'Opening' | 'Open' | 'Hold'>('Closed');
   const [activeGateMessage, setActiveGateMessage] = useState<string | null>(null);
 
